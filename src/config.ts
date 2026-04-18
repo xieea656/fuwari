@@ -10,7 +10,7 @@ import { LinkPreset } from "./types/config";
 export const siteConfig: SiteConfig = {
 	title: "晓黎の小破站", // 网站标题
 	subtitle: "见过花开就好，何必在意花为谁开。", // 网站副标题
-	lang: "en", // 网站语言代码，例如 'en', 'zh_CN', 'ja' 等
+	lang: "zh_CN", // 网站语言代码，例如 'en', 'zh_CN', 'ja' 等
 	themeColor: {
 		hue: 250, // 主题色的默认色调，取值范围 0 到 360。例如：红色 0，青色 200，蓝色 250，粉色 345
 		fixed: false, // 是否对访问者隐藏主题色选择器
