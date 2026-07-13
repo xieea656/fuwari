@@ -1,6 +1,6 @@
 ---
 title: AI 对编程岗位的影响
-published: 2026-06-12
+published: 2026-06-11T16:00:00.000Z
 tags:
   - ai
   - career
