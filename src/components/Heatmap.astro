@@ -1,0 +1,211 @@
+---
+/**
+ * 博客活动热力图（仿 GitHub 贡献图）
+ * 构建时读取所有文章的 published 日期与正文字数，按"天"累计，
+ * 渲染最近一年的 GitHub 风格绿色热力图。适配 Fuwari 的 light/dark 主题。
+ * 思路参考：https://pinpe.top/posts/blog-github-map/
+ */
+import { getCollection } from "astro:content";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+const { class: className = "", style = "" } = Astro.props;
+
+// 获取所有文章（与 utils/content-utils 的 draft 过滤逻辑一致）
+const posts = await getCollection("posts", ({ data }) => {
+	return import.meta.env.PROD ? data.draft !== true : true;
+});
+
+// 统计正文可读字符数：去掉代码块、图片、链接 URL、HTML 与 markdown 标记后按码点计数
+function countChars(body: string | undefined): number {
+	if (!body) return 0;
+	const text = body
+		.replace(/```[\s\S]*?```/g, "")
+		.replace(/~~~[\s\S]*?~~~/g, "")
+		.replace(/`[^`]*`/g, "")
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+		.replace(/<[^>]+>/g, "")
+		.replace(/^[#>*_~\-\s]+/gm, "")
+		.replace(/[*_~`]/g, "")
+		.replace(/\s/g, "");
+	return Array.from(text).length;
+}
+
+// 按"天"累计字数，key 为 YYYY-MM-DD（toISOString 规避构建机时区差异）
+const dailyWords: Record<string, number> = {};
+for (const post of posts) {
+	const dateStr = new Date(post.data.published).toISOString().slice(0, 10);
+	dailyWords[dateStr] = (dailyWords[dateStr] ?? 0) + countChars(post.body);
+}
+
+const startOfDay = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+const today = startOfDay(new Date());
+const oneYearAgo = new Date(today);
+oneYearAgo.setUTCFullYear(oneYearAgo.getUTCFullYear() - 1);
+
+// 调整到周一 / 周日（JS getUTCDay: 0=周日 ... 6=周六），网格按"周一到周日"排列
+const toMonday = (d: Date) => {
+	const day = d.getUTCDay();
+	const diff = day === 0 ? -6 : 1 - day;
+	const r = new Date(d);
+	r.setUTCDate(r.getUTCDate() + diff);
+	return r;
+};
+const toSunday = (d: Date) => {
+	const day = d.getUTCDay();
+	const diff = day === 0 ? 0 : 7 - day;
+	const r = new Date(d);
+	r.setUTCDate(r.getUTCDate() + diff);
+	return r;
+};
+
+const startDate = toMonday(oneYearAgo);
+const endDate = toSunday(today);
+
+const days: { date: string; count: number }[] = [];
+const cur = new Date(startDate);
+while (cur.getTime() <= endDate.getTime()) {
+	const dateStr = cur.toISOString().slice(0, 10);
+	days.push({ date: dateStr, count: dailyWords[dateStr] ?? 0 });
+	cur.setUTCDate(cur.getUTCDate() + 1);
+}
+
+// 颜色分级：基于非零日期字数的四分位数，保证有更新的格子至少 level 1
+const counts = days.map((d) => d.count).filter((c) => c > 0).sort((a, b) => a - b);
+const quantile = (sorted: number[], q: number): number => {
+	if (sorted.length === 0) return Number.POSITIVE_INFINITY;
+	const pos = (sorted.length - 1) * q;
+	const base = Math.floor(pos);
+	const rest = pos - base;
+	return sorted[base + 1] !== undefined
+		? sorted[base] + rest * (sorted[base + 1] - sorted[base])
+		: sorted[base];
+};
+const q25 = quantile(counts, 0.25);
+const q50 = quantile(counts, 0.5);
+const q75 = quantile(counts, 0.75);
+const getLevel = (count: number): number => {
+	if (count === 0) return 0;
+	if (count <= q25) return 1;
+	if (count <= q50) return 2;
+	if (count <= q75) return 3;
+	return 4;
+};
+
+// 按周分列（每 7 天一列）
+const weeks = days
+	.map((d) => ({ ...d, level: getLevel(d.count) }));
+const weekCols: { date: string; count: number; level: number }[][] = [];
+for (let i = 0; i < weeks.length; i += 7) {
+	weekCols.push(weeks.slice(i, i + 7));
+}
+
+// 月份标签：每列取该周第一天，仅在月份变化时显示
+const monthLabels: string[] = [];
+let prevMonth = "";
+for (const w of weekCols) {
+	const first = new Date(`${w[0].date}T00:00:00Z`);
+	const m = `${first.getUTCFullYear()}.${first.getUTCMonth() + 1}`;
+	monthLabels.push(m !== prevMonth ? m : "");
+	prevMonth = m;
+}
+
+const totalWords = days.reduce((s, d) => s + d.count, 0);
+const activeDays = counts.length;
+const dayNames = ["一", "二", "三", "四", "五", "六", "日"];
+---
+
+<div class={`hm-card card-base px-9 py-6 w-full rounded-[var(--radius-large)] overflow-hidden ${className}`} style={style}>
+	<div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+		<h2 class="text-lg font-bold text-75">博客活动</h2>
+		<span class="text-sm opacity-70">
+			过去一年更新 {activeDays} 天 · 共 {totalWords.toLocaleString()} 字
+		</span>
+	</div>
+	<div class="hm-scroll">
+		<table class="hm-table">
+			<thead>
+				<tr>
+					<th class="hm-corner"></th>
+					{monthLabels.map((label) => (
+						<th class="hm-month-label">{label}</th>
+					))}
+				</tr>
+			</thead>
+			<tbody>
+				{dayNames.map((dayName, row) => (
+					<tr>
+						<td class="hm-day-label">{row === 0 || row === 2 || row === 4 ? dayName : ""}</td>
+						{weekCols.map((week) => {
+							const cell = week[row];
+							return (
+								<td>
+									{cell ? (
+										<div
+											class={`hm-cell hm-level-${cell.level}`}
+											title={`${cell.date}：${cell.count} 字`}
+										></div>
+									) : null}
+								</td>
+							);
+						})}
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</div>
+	<div class="mt-3 flex items-center justify-end gap-1 text-xs opacity-70">
+		<span>少</span>
+		{[0, 1, 2, 3, 4].map((l) => (
+			<div class={`hm-cell hm-level-${l}`}></div>
+		))}
+		<span>多</span>
+	</div>
+</div>
+
+<style is:global>
+.hm-table { border-collapse: collapse; }
+.hm-table th, .hm-table td { padding: 2px; }
+.hm-corner { width: 24px; }
+.hm-month-label {
+	text-align: left;
+	font-size: 11px;
+	color: #666;
+	white-space: nowrap;
+	min-width: 13px;
+}
+.hm-day-label {
+	font-size: 11px;
+	color: #666;
+	text-align: right;
+	padding-right: 5px;
+	white-space: nowrap;
+}
+.hm-cell {
+	width: 12px;
+	height: 12px;
+	border-radius: 2px;
+	background-color: #ebedf0;
+	display: inline-block;
+}
+.hm-level-0 { background-color: #ebedf0; }
+.hm-level-1 { background-color: #c6e48b; }
+.hm-level-2 { background-color: #7bc96f; }
+.hm-level-3 { background-color: #239a3b; }
+.hm-level-4 { background-color: #196127; }
+.hm-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.hm-cell:hover { outline: 1px solid #999; }
+html.dark .hm-month-label, html.dark .hm-day-label { color: #8b949e; }
+html.dark .hm-level-0 { background-color: #161b22; }
+html.dark .hm-level-1 { background-color: #0e4429; }
+html.dark .hm-level-2 { background-color: #006d32; }
+html.dark .hm-level-3 { background-color: #26a641; }
+html.dark .hm-level-4 { background-color: #39d353; }
+html.dark .hm-cell:hover { outline-color: #555; }
+@media (max-width: 640px) {
+	.hm-card { padding: 1.25rem 1.25rem; }
+}
+</style>
