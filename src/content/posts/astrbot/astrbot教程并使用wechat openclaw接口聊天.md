@@ -3,6 +3,7 @@ date: 2026/4/18
 title: "Astrbot教程并使用Wechat OpenClaw接口聊天"
 published: 2026-06-20
 ---
+
 最近研究聊天机器人，看到astrbot，于是出个教程
 **在观看本教程之前，你需要准备**
 **一颗聪明的头脑（用于独立解决问题）**
@@ -43,21 +44,20 @@ published: 2026-06-20
 1. 机器人 >> 创建机器人  >> 个人微信
 ==注：不是个人的微信号，是指个人微信的openclaw接口==
  #最好创建一个独立的配置文件，让各个机器人之间隔离
-2. 直接保存，等待几秒后会出现扫描按钮
-3. **用==最新版手机微信==扫码**
+2. **用==最新版手机微信==扫码**
 之后在聊天中的“微信openclaw”就是astrbot机器人了
 
 ## 第三步 基础配置与模型提供商
 ### 模型提供商
  在模型提供商中，可以设置使用的各个模型，例如DeepSeek chat
- ![image.png](https://oss.xieea.top/img/6a351da77df25.png)
+ ![image.png](https://img.xieea.top/i/2026/07/31/6a6caf13a27bf.png)
 
  astrbot提供了很多提供商预设，但他们只是帮你把API Base URL填好了，让你不用在api文档中找，所以**如果你想使用的提供商在其中没有，请自行在提供商的api文档中找到openai格式API Base URL与api key**
  - 在填写完API Base URL和api key之后，点击“保存并获取模型列表”
  - 然后启用你想要用的模型
 
 ### 配置文件的基础配置
- ![image.png](https://oss.xieea.top/img/6a351da77df25.png)
+ ![image.png](https://img.xieea.top/i/2026/07/31/6a6caf13a27bf.png)
 
 **在”普通配置“页面中可以对配置文件进行编辑，可以找到更多功能**
 #### 模型配置
@@ -70,7 +70,7 @@ published: 2026-06-20
 ---
 
 现在 ，让我们看向**平台配置**
-![image.png](https://oss.xieea.top/img/6a351da77df25.png)
+![image.png](https://img.xieea.top/i/2026/07/31/6a6caf13a27bf.png)
 
 #### 白名单
 **默认开启白名单模式，只有白名单内的会话会被响应，在和ai聊天之前，需要将会话id加入白名单或关闭白名单模式 ==注意是会话id不是用户id==**
@@ -78,4 +78,3 @@ published: 2026-06-20
 ---
 #### 插件
 **不过多介绍，astrbot拥有丰富的插件生态，可以自由去探索（对QQbot平台支持最多）**
-

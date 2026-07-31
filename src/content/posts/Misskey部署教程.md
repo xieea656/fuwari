@@ -17,12 +17,12 @@ tags:
 
 1. 打开 https://moebun.com/aff/CCTAJESP ，注册账号
 2. 进控制台，点「云服务器」→「购买」
-   ![image.png](https://oss.xieea.top/img/6a531e7b09652.png)
+   ![image.png](https://img.xieea.top/i/2026/07/31/6a6cb028e5a61.png)
    这个试用活动价格非常低，购买时选择“试用”，就可以看到下面这个更便宜的，综合下来二核2G的话，7块钱一个月
-3. 购买时选择“试用”
-   ![image.png](https://oss.xieea.top/img/6a531dc0e147c.png)
-4. 买好后会给你一个 **IP 地址**、**root 密码**，记下来
-   ![image.png](https://oss.xieea.top/img/6a531e16b7236.png)
+4. 购买时选择“试用”
+   ![image.png](https://img.xieea.top/i/2026/07/31/6a6cb01392d47.png)
+5. 买好后会给你一个 **IP 地址**、**root 密码**，记下来
+   ![image.png](https://img.xieea.top/i/2026/07/31/6a6cb01fab871.png)
 
 
 然后用终端连接服务器：
@@ -157,7 +157,7 @@ docker logs -f misskey
 - SSL 模式选 **Flexible**
 
 这样访问你的域名就会自动走 HTTPS 了。
-![image.png](https://oss.xieea.top/img/6a531f082a756.png)
+![image.png](https://img.xieea.top/i/2026/07/31/6a6cb03177af0.png)
 ## 第七步：打开网页
 
 浏览器访问 https://你的域名，按提示创建管理员账号就行了！

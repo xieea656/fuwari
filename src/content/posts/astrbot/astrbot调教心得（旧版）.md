@@ -2,6 +2,7 @@
 title: "Astrbot折腾与调教1"
 published: 2026-06-20
 ---
+
 # 前言
 深入使用了几天astrbot，现在来讲一下我的心得
 **怎么让ai变得更生动同时兼顾帮助用户进行轻度任务的功能**
@@ -28,7 +29,7 @@ published: 2026-06-20
 这里推荐一个工具{[hicccc77/WeFlow: WeFlow - 一个本地的微信聊天记录导出和年度报告应用](https://github.com/hicccc77/WeFlow)}
 weflow 可以导出微信聊天记录   如果可以给这个项目点个star吧
 1. 下载
-![613](https://oss.xieea.top/img/6a351da6dc1a7.png)
+![613](https://img.xieea.top/i/2026/07/31/6a6cafca75ad2.png)
     点击旁边的**Releases**
     下载适合你电脑的版本
 2. 按照向导获取好密钥
@@ -47,37 +48,37 @@ weflow 可以导出微信聊天记录   如果可以给这个项目点个star吧
 
 # 第二部分 插件
 插件是丰富astrbot功能的重要组成部分，以下是我正在使用的几款插件
-![696](https://oss.xieea.top/img/6a351d4c331ae.png)
+![696](https://img.xieea.top/i/2026/07/31/6a6caf5352c7f.png)
 ## 记忆
 记忆插件是很重要的，ai在聊天的过程中通过记忆可以更了解你的习惯，以及她自己的背景信息。会使回复更有感情。同时可以记住你
 有很多的记忆插件，我用的是Memorix，它们的原理都是类似的，但是由于我已经有了很多记忆在Memorix里面，所以已经不好切换了
-![](https://oss.xieea.top/img/6a351d4cddd04.png)
+![](https://img.xieea.top/i/2026/07/31/6a6caf580ad28.png)
 ### 接下来是有关Memorix的我个人配置建议
 1. 作用域隔离模式
-   ![](https://oss.xieea.top/img/6a351d4d96728.png)
+   ![](https://img.xieea.top/i/2026/07/31/6a6caf61ccf9e.png)
    看情况填，我是全局
 2. **向量嵌入，这个很重要，会影响记忆的质量。**
-   ![](https://oss.xieea.top/img/6a351d4e55791.png)
+   ![](https://img.xieea.top/i/2026/07/31/6a6caf6be4dcb.png)
    最好打开**使用远程向量服务**，然后填一个其他的向量模型，这里我用的是硅基流动的千问embedding模型，向量模型调用量不大，所以也比较便宜
 #### 白嫖couldflare的embedding模型教程
 **如果不想为此付费，可以使用大善人的workers ai白嫖**
 1. 打开couldflare注册且登录一个账号
-2. ![](https://oss.xieea.top/img/6a351d4f0e025.png)
+2. ![](https://img.xieea.top/i/2026/07/31/6a6caf71d8930.png)
    点击右上角账户图标，再点击**配置文件**
-3. ![](https://oss.xieea.top/img/6a351d4faa1c9.png)
+3. ![](https://img.xieea.top/i/2026/07/31/6a6caf79d6d3a.png)
    点击**API令牌**
-4. ![168](https://oss.xieea.top/img/6a351d50483af.png)
+4. ![168](https://img.xieea.top/i/2026/07/31/6a6caf800c67a.png)
    右上角，点击**创建令牌**
-5. ![](https://oss.xieea.top/img/6a351d50ea543.png)
+5. ![](https://img.xieea.top/i/2026/07/31/6a6caf8637c40.png)
     在模板中选择**worker AI**
-6. ![](https://oss.xieea.top/img/6a351d518eab0.png)
+6. ![](https://img.xieea.top/i/2026/07/31/6a6caf8faf894.png)
    在**账户资源中选择所有账户**
    向下滑，点击**继续以显示摘要**
-7. ![](https://oss.xieea.top/img/6a351d523e6ce.png)
+7. ![](https://img.xieea.top/i/2026/07/31/6a6caf94d980c.png)
    点击**创建令牌**
-8. ![](https://oss.xieea.top/img/6a351d52c95e1.png)
+8. ![](https://img.xieea.top/i/2026/07/31/6a6caf9b43db8.png)
    **复制并保存好这个令牌**（上图中的令牌已删除）
-9. ![](https://oss.xieea.top/img/6a351d53617f1.png)
+9. ![](https://img.xieea.top/i/2026/07/31/6a6cafa31d550.png)
    在这里复制你的**账户id**并妥善保存
 10. 最后在Memorix配置界面的embedding模型配置中这样填
 ```
@@ -94,17 +95,17 @@ weflow 可以导出微信聊天记录   如果可以给这个项目点个star吧
 
 ## 防抖动
 防抖动是为了优化使用体验，避免你想发多条消息却发现ai已经回复的情况（最常见于同时发图片和文字的时候）
-![](https://oss.xieea.top/img/6a351d53f34bb.png)
+![](https://img.xieea.top/i/2026/07/31/6a6cafa924911.png)
 ## 分段回复
 这个插件也有很多人做，按自己喜欢用就行，主要是优化ai的回复。
 减少一回一大段的情况，更加自然
- ![](https://oss.xieea.top/img/6a351d54b2710.png)
+ ![](https://img.xieea.top/i/2026/07/31/6a6cafadce767.png)
 ## 视频
 我想要她能看懂B站视频，所以加了个视频解析插件（biliVideo 视频总结），再让她自己写个skill就可以用了
-![](https://oss.xieea.top/img/6a351d555fc16.png)
+![](https://img.xieea.top/i/2026/07/31/6a6cafb6541e6.png)
 # 第三部分 subagent
 因为我会让她帮我做一些事，可是当她干活时，会对记忆和上下文造成污染，也可能会导致注意力偏移。于是，我使用subagent（子代理）功能，让她把任务分发下去，减少上下文和记忆的污染
-![](https://oss.xieea.top/img/6a351d5600dc4.png)
+![](https://img.xieea.top/i/2026/07/31/6a6cafc1d9084.png)
 **如何设置？**
 1. 先打开**启用subagent编排**
 2. 点击**创建subagent**，给subagent创建**单独的人格**，以及只勾选**需要的工具和skill**

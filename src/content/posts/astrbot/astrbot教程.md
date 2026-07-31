@@ -9,9 +9,9 @@ title: astrbot调教教程2
 并且将完成任务的需求转移到claude code上，astrbot变为纯粹的聊天机器人
 # 第一步，安装需要插件
 安装**我会永远陪着你**，**livingmemory**和一个输出分段插件
-![image.png](https://oss.xieea.top/img/6a360846700e1.png)
-![image.png|399](https://oss.xieea.top/img/6a36085438802.png)
-![image.png](https://oss.xieea.top/img/6a36087183d48.png)
+![image.png](https://img.xieea.top/i/2026/07/31/6a6cafd202247.png)
+![image.png|399](https://img.xieea.top/i/2026/07/31/6a6cafd5e25d6.png)
+![image.png](https://img.xieea.top/i/2026/07/31/6a6cafdab82e7.png)
 如果你已经使用了别的记忆插件，可以继续用或者让ai帮忙转移一下
 
 “我会永远陪着你”是一个强大的ai角色扮演插件，拥有非常丰富的功能，可有效提升扮演沉浸感
@@ -21,15 +21,15 @@ liveingmemory 是一个可配合陪伴的记忆插件
 输出分段是为了把ai的对话分成一段段，更像人类习惯
 # 配置插件与astrbot
 1. 调整astrbot：将配置文件中的**上下文管理策略->历史超限或上下文接近上限时的处理方式**改成**由LLM压缩上下文**，选一个合适的对话保留轮数
-   ![](https://oss.xieea.top/img/6a407deb23a17.png)
+   ![](https://img.xieea.top/i/2026/07/31/6a6cafde49363.png)
 2. 选择需要的插件
-   ![](https://oss.xieea.top/img/6a407e437bb56.png)
+   ![](https://img.xieea.top/i/2026/07/31/6a6cafe36c7a1.png)
 3. 在插件页面打开内嵌webui
-   ![](https://oss.xieea.top/img/6a407fa3903a3.png)
+   ![](https://img.xieea.top/i/2026/07/31/6a6cafeb9b650.png)
 4. 进行模块的配置和模型的配置
-   ![](https://oss.xieea.top/img/6a407fe1100f1.png)
+   ![](https://img.xieea.top/i/2026/07/31/6a6caff4d5030.png)
 5. 把角色设定和世界观等信息填入
-   ![](https://oss.xieea.top/img/6a408139041f5.png)
+   ![](https://img.xieea.top/i/2026/07/31/6a6caff98f4c6.png)
 6. 配置你自己的记忆插件，可能你需要一个向量模型，我使用的是cloudfare workers ai的向量模型。免费额度绰绰有余，配置教程可以看上一篇
 
 # 如何写一个良好的提示词
@@ -37,4 +37,3 @@ liveingmemory 是一个可配合陪伴的记忆插件
 1. 可以有约束，但是不能太多，不然效果会变差
 2. 陪伴插件很好解决了她说不出事情，没有“生活”的情况，但你的提示词要写好，不然她说的事情很怪
 3. 可以有点到面，不一定一下把完整的角色想出来，先从一两个特点开始，再慢慢铺开来
-
