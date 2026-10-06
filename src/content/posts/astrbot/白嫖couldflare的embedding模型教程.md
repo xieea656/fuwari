@@ -1,37 +1,45 @@
 ---
-title: 白嫖couldflare的embedding模型
+title: 白嫖 Cloudflare 的 Embedding 模型
 published: 2026-06-28
 ---
 
-# 白嫖couldflare的embedding模型教程
-**如果不想为向量付费，可以使用大善人的workers ai白嫖**也可以获取不错的向量检索效果
-1. 打开couldflare注册且登录一个账号
-2. ![](https://img.xieea.top/i/2026/07/31/6a6caf71d8930.png)
-   点击右上角账户图标，再点击**配置文件**
-3. ![](https://img.xieea.top/i/2026/07/31/6a6caf79d6d3a.png)
-   点击**API令牌**
-4. ![168](https://img.xieea.top/i/2026/07/31/6a6caf800c67a.png)
-   右上角，点击**创建令牌**
-5. ![](https://img.xieea.top/i/2026/07/31/6a6caf8637c40.png)
-    在模板中选择**worker AI**
-6. ![](https://img.xieea.top/i/2026/07/31/6a6caf8faf894.png)
-   在**账户资源中选择所有账户**
-   向下滑，点击**继续以显示摘要**
-7. ![](https://img.xieea.top/i/2026/07/31/6a6caf94d980c.png)
-   点击**创建令牌**
-8. ![](https://img.xieea.top/i/2026/07/31/6a6caf9b43db8.png)
-   **复制并保存好这个令牌**（上图中的令牌已删除）
-9. ![](https://img.xieea.top/i/2026/07/31/6a6cafa31d550.png)
-   在这里复制你的**账户id**并妥善保存
-10. 最后在Memorix配置界面的embedding模型配置中这样填
+# 前言
+
+如果你不想为向量嵌入付费，可以使用 Cloudflare Workers AI 的免费额度，也能获得不错的向量检索效果。
+
+**你需要**：
+1. 一个 Cloudflare 账号
+
+# 第一步：创建 API Token
+
+1. 登录 [Cloudflare](https://dash.cloudflare.com) 并注册一个账号
+2. 点击右上角账户图标，再点击**配置文件**点击**API令牌**
+![image.png](https://origin.picgo.net/2026/10/06/202610062254240272e1296c1df9e25b2.png)
+
+4. 右上角，点击**创建令牌**
+![image.png](https://origin.picgo.net/2026/10/06/2026100622552141140173569bbbe7442.png)
+6. 在模板中选择 **Worker AI**
+
+![image.png](https://origin.picgo.net/2026/10/06/20261006225604955ee60a388053c5d6e.png)
+
+5. 按提示创建令牌，**复制并保存好这个令牌**（只显示一次）
+
+
+# 第二步：获取账户 ID
+
+观察浏览器地址栏，你会看到：
+
 ```
-  API Key 填你保存的cloudfare令牌
-  API Base URL 填写
-  https://api.cloudflare.com/client/v4/accounts/[这里替换成你保存的账户id]/ai/v1
-  （要带上方括号一起替换）
-  Embedding 模型名称 填 @cf/qwen/qwen3-embedding-0.6b
+https://dash.cloudflare.com/<你的账户id>/home
 ```
-11. 也可以在astrbot提供商页面添加
-   ![](https://img.xieea.top/i/2026/07/31/6a6caffed356e.png)
-   ![image.png](https://img.xieea.top/i/2026/07/31/6a6cb0044df06.png)
-   ![image.png](https://img.xieea.top/i/2026/07/31/6a6cb00ba62e1.png)
+把这个 `<你的账户id>` 复制下来。
+
+# 第三步：配置 API 信息
+
+```
+API Key: <第一步生成的令牌>
+Base URL: https://api.cloudflare.com/client/v4/accounts/<你的账户id>/ai/v1
+Model: @cf/qwen/qwen3-embedding-0.6b
+```
+
+
