@@ -1,9 +1,10 @@
 ---
 title: node.js安装教程
 published: 2026-07-25T16:00:00.000Z
+description: 在 Windows、Linux、macOS 上安装 Node.js 的完整教程，包含 LTS 版本选择、环境变量配置和版本管理。
 ---
 
-# Windows
+## Windows
 1. 进入官网 [Node.js — 下载 Node.js®](https://nodejs.org/zh-cn/download)
    ![image.png](https://img.xieea.top/i/2026/07/31/6a6caf2eb6552.png)
 2. 下载Windows版的安装程序（msl）
@@ -12,7 +13,7 @@ published: 2026-07-25T16:00:00.000Z
    同意协议
 5. ![image.png](https://img.xieea.top/i/2026/07/31/6a6caf388809b.png)
    注意**add to path**一路下一步即可
-# Linux
+## Linux
 ## CentOS、Fedora 和 Red Hat Enterprise Linux
 ```
 dnf install nodejs npm

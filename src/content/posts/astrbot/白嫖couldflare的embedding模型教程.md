@@ -1,9 +1,10 @@
 ---
 title: 白嫖 Cloudflare 的 Embedding 模型
 published: 2026-06-28
+description: 免费使用 Cloudflare Workers AI 获取 embedding 向量，无需付费，包含创建 API Token、获取账户 ID、配置模型等步骤。
 ---
 
-# 前言
+## 前言
 
 如果你不想为向量嵌入付费，可以使用 Cloudflare Workers AI 的免费额度，也能获得不错的向量检索效果。
 
@@ -25,7 +26,7 @@ published: 2026-06-28
 5. 按提示创建令牌，**复制并保存好这个令牌**（只显示一次）
 
 
-# 第二步：获取账户 ID
+## 第二步：获取账户 ID
 
 观察浏览器地址栏，你会看到：
 
