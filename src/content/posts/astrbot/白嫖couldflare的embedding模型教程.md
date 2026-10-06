@@ -1,5 +1,5 @@
 ---
-title: 白嫖 Cloudflare 的 Embedding 模型
+title: 免费使用 Cloudflare Embedding 模型：完整教程
 published: 2026-06-28
 description: 免费使用 Cloudflare Workers AI 获取 embedding 向量，无需付费，包含创建 API Token、获取账户 ID、配置模型等步骤。
 ---

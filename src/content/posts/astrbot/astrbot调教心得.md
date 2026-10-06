@@ -1,5 +1,5 @@
 ---
-title: astrbot调教心得
+title: AstrBot 调教心得：让 AI 回复更生动自然
 published: 2026-10-06
 description: 深入使用 AstrBot 几天的心得：如何让 AI 更生动，包括提示词优化、聊天记录导入、记忆插件配置、分段回复等实用技巧。
 ---
