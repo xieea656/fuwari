@@ -6,7 +6,7 @@ description: 在 Windows、Linux、macOS 上安装 Git 的完整教程，包含�
 
 ## Windows
 1. 打开git for Windows [Git - Install for Windows](https://git-scm.com/install/windows)
-2. ![image.png](https://img.xieea.top/i/2026/07/31/6a6caf403c144.png)
+2. ![git for Windows页面图片](https://origin.picgo.net/2026/10/10/20261010214056204439d1e429eae7eab.png)
    下载安装包
 3. 打开安装包 一直下一步即可
 ## Linux
