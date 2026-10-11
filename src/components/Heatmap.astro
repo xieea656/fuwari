@@ -1,211 +1,110 @@
 ---
 /**
- * 博客活动热力图（仿 GitHub 贡献图）
- * 构建时读取所有文章的 published 日期与正文字数，按"天"累计，
- * 渲染最近一年的 GitHub 风格绿色热力图。适配 Fuwari 的 light/dark 主题。
- * 思路参考：https://pinpe.top/posts/blog-github-map/
+ * 首页"博客活动"栏 —— GitHub 活动展示 iframe 容器。
+ *
+ * 数据与展示由 https://widgets.xieea.top/ 承载（Cloudflare Workers + React +
+ * Rare UI github-activity 组件，见 gh-widgets 仓库），本页只负责：
+ *   - 首屏把当前主题（dark/hue）拼进 iframe 的 src，避免"先亮后暗"闪一下；
+ *   - 监听 <html> 的 class / style 变化，主题切换时向 iframe 发 hm-theme；
+ *   - 接收 iframe 的 hm-height 消息，写 iframe.style.height 保持无内部滚动条。
+ *
+ * 原字数统计逻辑（getCollection / countChars / 分级 / 网格渲染）已按阶段 E 彻底移除。
+ * 注意：本仓库同一页面分组里只能存在一个 <style is:global> 块（见设计文档第 11 节），
+ * 因此这里一律用 Tailwind 类与内联样式，不新增任何 <style> 块。
  */
-import { getCollection } from "astro:content";
-
 interface Props {
 	class?: string;
 	style?: string;
 }
 const { class: className = "", style = "" } = Astro.props;
 
-// 获取所有文章（与 utils/content-utils 的 draft 过滤逻辑一致）
-const posts = await getCollection("posts", ({ data }) => {
-	return import.meta.env.PROD ? data.draft !== true : true;
-});
-
-// 统计正文可读字符数：去掉代码块、图片、链接 URL、HTML 与 markdown 标记后按码点计数
-function countChars(body: string | undefined): number {
-	if (!body) return 0;
-	const text = body
-		.replace(/```[\s\S]*?```/g, "")
-		.replace(/~~~[\s\S]*?~~~/g, "")
-		.replace(/`[^`]*`/g, "")
-		.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-		.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-		.replace(/<[^>]+>/g, "")
-		.replace(/^[#>*_~\-\s]+/gm, "")
-		.replace(/[*_~`]/g, "")
-		.replace(/\s/g, "");
-	return Array.from(text).length;
-}
-
-// 按"天"累计字数，key 为 YYYY-MM-DD（toISOString 规避构建机时区差异）
-const dailyWords: Record<string, number> = {};
-for (const post of posts) {
-	const dateStr = new Date(post.data.published).toISOString().slice(0, 10);
-	dailyWords[dateStr] = (dailyWords[dateStr] ?? 0) + countChars(post.body);
-}
-
-const startOfDay = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-const today = startOfDay(new Date());
-const oneYearAgo = new Date(today);
-oneYearAgo.setUTCFullYear(oneYearAgo.getUTCFullYear() - 1);
-
-// 调整到周一 / 周日（JS getUTCDay: 0=周日 ... 6=周六），网格按"周一到周日"排列
-const toMonday = (d: Date) => {
-	const day = d.getUTCDay();
-	const diff = day === 0 ? -6 : 1 - day;
-	const r = new Date(d);
-	r.setUTCDate(r.getUTCDate() + diff);
-	return r;
-};
-const toSunday = (d: Date) => {
-	const day = d.getUTCDay();
-	const diff = day === 0 ? 0 : 7 - day;
-	const r = new Date(d);
-	r.setUTCDate(r.getUTCDate() + diff);
-	return r;
-};
-
-const startDate = toMonday(oneYearAgo);
-const endDate = toSunday(today);
-
-const days: { date: string; count: number }[] = [];
-const cur = new Date(startDate);
-while (cur.getTime() <= endDate.getTime()) {
-	const dateStr = cur.toISOString().slice(0, 10);
-	days.push({ date: dateStr, count: dailyWords[dateStr] ?? 0 });
-	cur.setUTCDate(cur.getUTCDate() + 1);
-}
-
-// 颜色分级：基于非零日期字数的四分位数，保证有更新的格子至少 level 1
-const counts = days.map((d) => d.count).filter((c) => c > 0).sort((a, b) => a - b);
-const quantile = (sorted: number[], q: number): number => {
-	if (sorted.length === 0) return Number.POSITIVE_INFINITY;
-	const pos = (sorted.length - 1) * q;
-	const base = Math.floor(pos);
-	const rest = pos - base;
-	return sorted[base + 1] !== undefined
-		? sorted[base] + rest * (sorted[base + 1] - sorted[base])
-		: sorted[base];
-};
-const q25 = quantile(counts, 0.25);
-const q50 = quantile(counts, 0.5);
-const q75 = quantile(counts, 0.75);
-const getLevel = (count: number): number => {
-	if (count === 0) return 0;
-	if (count <= q25) return 1;
-	if (count <= q50) return 2;
-	if (count <= q75) return 3;
-	return 4;
-};
-
-// 按周分列（每 7 天一列）
-const weeks = days
-	.map((d) => ({ ...d, level: getLevel(d.count) }));
-const weekCols: { date: string; count: number; level: number }[][] = [];
-for (let i = 0; i < weeks.length; i += 7) {
-	weekCols.push(weeks.slice(i, i + 7));
-}
-
-// 月份标签：每列取该周第一天，仅在月份变化时显示
-const monthLabels: string[] = [];
-let prevMonth = "";
-for (const w of weekCols) {
-	const first = new Date(`${w[0].date}T00:00:00Z`);
-	const m = `${first.getUTCFullYear()}.${first.getUTCMonth() + 1}`;
-	monthLabels.push(m !== prevMonth ? m : "");
-	prevMonth = m;
-}
-
-const totalWords = days.reduce((s, d) => s + d.count, 0);
-const activeDays = counts.length;
-const dayNames = ["一", "二", "三", "四", "五", "六", "日"];
+// 首屏占位高度，避免 iframe 加载期间出现 CLS 抖动（组件收起态约 120–140px）。
+const PLACEHOLDER_HEIGHT = "130px";
 ---
 
-<div class={`hm-card card-base px-9 py-6 w-full rounded-[var(--radius-large)] overflow-hidden ${className}`} style={style}>
-	<div class="flex flex-wrap justify-between items-center gap-2 mb-4">
-		<h2 class="text-lg font-bold text-75">博客活动</h2>
-		<span class="text-sm opacity-70">
-			过去一年更新 {activeDays} 天 · 共 {totalWords.toLocaleString()} 字
-		</span>
-	</div>
-	<div class="hm-scroll">
-		<table class="hm-table">
-			<thead>
-				<tr>
-					<th class="hm-corner"></th>
-					{monthLabels.map((label) => (
-						<th class="hm-month-label">{label}</th>
-					))}
-				</tr>
-			</thead>
-			<tbody>
-				{dayNames.map((dayName, row) => (
-					<tr>
-						<td class="hm-day-label">{row === 0 || row === 2 || row === 4 ? dayName : ""}</td>
-						{weekCols.map((week) => {
-							const cell = week[row];
-							return (
-								<td>
-									{cell ? (
-										<div
-											class={`hm-cell hm-level-${cell.level}`}
-											title={`${cell.date}：${cell.count} 字`}
-										></div>
-									) : null}
-								</td>
-							);
-						})}
-					</tr>
-				))}
-			</tbody>
-		</table>
-	</div>
-	<div class="mt-3 flex items-center justify-end gap-1 text-xs opacity-70">
-		<span>少</span>
-		{[0, 1, 2, 3, 4].map((l) => (
-			<div class={`hm-cell hm-level-${l}`}></div>
-		))}
-		<span>多</span>
-	</div>
+<div
+	class={`card-base px-9 py-6 w-full rounded-[var(--radius-large)] overflow-hidden ${className}`}
+	style={style}
+>
+	<iframe
+		data-widget="true"
+		data-base="https://widgets.xieea.top/"
+		loading="lazy"
+		frameborder="0"
+		scrolling="no"
+		title="博客活动：GitHub 活动热力图与仓库提交"
+		class="block w-full border-0"
+		style={`height: ${PLACEHOLDER_HEIGHT}; min-height: ${PLACEHOLDER_HEIGHT};`}
+	></iframe>
+	<noscript>
+		<div class="text-sm opacity-70">
+			本页在启用 JavaScript 后会在此显示 GitHub 活动；或直接访问
+			<a class="transition link text-[var(--primary)] font-medium" href="https://widgets.xieea.top/" target="_blank" rel="noopener noreferrer">
+				widgets.xieea.top
+			</a>
+			。
+		</div>
+	</noscript>
 </div>
 
-<style is:global>
-.hm-table { border-collapse: collapse; }
-.hm-table th, .hm-table td { padding: 2px; }
-.hm-corner { width: 24px; }
-.hm-month-label {
-	text-align: left;
-	font-size: 11px;
-	color: #666;
-	white-space: nowrap;
-	min-width: 13px;
-}
-.hm-day-label {
-	font-size: 11px;
-	color: #666;
-	text-align: right;
-	padding-right: 5px;
-	white-space: nowrap;
-}
-.hm-cell {
-	width: 12px;
-	height: 12px;
-	border-radius: 2px;
-	background-color: #ebedf0;
-	display: inline-block;
-}
-.hm-level-0 { background-color: #ebedf0; }
-.hm-level-1 { background-color: #c6e48b; }
-.hm-level-2 { background-color: #7bc96f; }
-.hm-level-3 { background-color: #239a3b; }
-.hm-level-4 { background-color: #196127; }
-.hm-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.hm-cell:hover { outline: 1px solid #999; }
-html.dark .hm-month-label, html.dark .hm-day-label { color: #8b949e; }
-html.dark .hm-level-0 { background-color: #161b22; }
-html.dark .hm-level-1 { background-color: #0e4429; }
-html.dark .hm-level-2 { background-color: #006d32; }
-html.dark .hm-level-3 { background-color: #26a641; }
-html.dark .hm-level-4 { background-color: #39d353; }
-html.dark .hm-cell:hover { outline-color: #555; }
-@media (max-width: 640px) {
-	.hm-card { padding: 1.25rem 1.25rem; }
-}
-</style>
+<script is:inline data-astro-rerun>
+	// 消息来源 / 目标都写死为 widgets 域，绝不接受任何 "*" 或不校验 origin 的写法。
+	const WIDGET_ORIGIN = "https://widgets.xieea.top";
+	const DEFAULT_HUE = 250;
+
+	const HOST = document.querySelector('[data-widget="true"]');
+	if (!HOST) {
+		throw new Error("[gh-activity] iframe container not found");
+	}
+
+	const readTheme = function () {
+		const root = document.documentElement;
+		const dark = root.classList.contains("dark");
+		const raw = getComputedStyle(root).getPropertyValue("--hue").trim();
+		const parsed = Number.parseInt(raw, 10);
+		return { dark: dark, hue: Number.isFinite(parsed) ? parsed : DEFAULT_HUE };
+	};
+
+	const buildUrl = function (theme) {
+		const base = HOST.getAttribute("data-base") || (WIDGET_ORIGIN + "/");
+		const url = new URL(base);
+		url.searchParams.set("dark", theme.dark ? "1" : "0");
+		url.searchParams.set("hue", String(theme.hue));
+		url.searchParams.set("embed", "1");
+		return url.toString();
+	};
+
+	const sendTheme = function (theme) {
+		if (HOST.contentWindow) {
+			HOST.contentWindow.postMessage(
+				{ type: "hm-theme", dark: theme.dark, hue: theme.hue },
+				WIDGET_ORIGIN,
+			);
+		}
+	};
+
+	const applyHeight = function (height) {
+		if (Number.isFinite(height) && height > 0) {
+			HOST.style.height = height + "px";
+		}
+	};
+
+	// 首屏：把当前主题写进 iframe 的 src，避免"先亮后暗"。
+	HOST.src = buildUrl(readTheme());
+
+	// 接收 iframe 上报的高度；必须校验 origin，不接受任何非 widgets 域的消息。
+	window.addEventListener("message", function (event) {
+		if (event.origin !== WIDGET_ORIGIN) return;
+		const data = event.data;
+		if (!data || data.type !== "hm-height") return;
+		applyHeight(data.height ?? 0);
+	});
+
+	// 主题切换：博客切明暗就是改 <html> 的 class，改色相就是改 <html> 的 style。
+	// 变化时读一次当前值发给 iframe（不重建 iframe，避免闪烁）。
+	const root = document.documentElement;
+	const observer = new MutationObserver(function () {
+		sendTheme(readTheme());
+	});
+	observer.observe(root, { attributes: true, attributeFilter: ["class", "style"] });
+</script>
