@@ -44,7 +44,7 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Home, // 首页链接预设
 		LinkPreset.Archive, // 归档页链接预设
 		LinkPreset.About, // 关于页链接预设
-		{ 
+		{
 			name: "GitHub", // 自定义链接名称
 			url: "https://github.com/xieea656", // 自定义链接地址，内部链接不应包含 base 路径，系统会自动添加
 			external: true, // 标记为外部链接，将显示外部链接图标并在新标签页打开
