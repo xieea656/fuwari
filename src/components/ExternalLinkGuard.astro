@@ -32,18 +32,18 @@ const siteHost = new URL(String(Astro.site ?? "https://blog.xieea.top/")).hostna
 						即将离开本站
 					</div>
 
-					<p class="mt-3 text-sm opacity-75 leading-relaxed">
-						你正在从 <span class="elg-from font-medium opacity-90">{siteHost}</span>
+					<p class="mt-3 text-sm leading-relaxed text-black/75 dark:text-white/75">
+						你正在从 <span class="elg-from font-medium">{siteHost}</span>
 						跳到一个外部网站。外部站点的内容不由本站控制，请自行判断是否可信。
 					</p>
 
-					<div class="mt-3 px-3 py-2 rounded-lg font-bold break-all bg-[var(--inline-code-bg)] text-[var(--inline-code-color)] elg-host">
+					<div class="mt-3 px-3 py-2 rounded-lg font-bold break-all bg-[var(--inline-code-bg)] text-neutral-900 dark:text-neutral-100 elg-host">
 						example.com
 					</div>
-					<div class="mt-2 text-xs opacity-50 break-all leading-relaxed elg-url"></div>
+					<div class="mt-2 text-xs break-all leading-relaxed text-black/60 dark:text-white/60 elg-url"></div>
 
 					<label
-						class="mt-4 flex items-center gap-2 text-sm opacity-75 cursor-pointer select-none"
+						class="mt-4 flex items-center gap-2 text-sm cursor-pointer select-none text-black/75 dark:text-white/75"
 					>
 						<input type="checkbox" class="elg-remember accent-[var(--primary)]" />
 						以后不再询问这个网站
