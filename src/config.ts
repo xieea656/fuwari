@@ -29,6 +29,14 @@ export const siteConfig: SiteConfig = {
 		enable: true, // 是否在文章右侧显示目录
 		depth: 2, // 目录中显示的最大标题深度，取值范围 1 到 3
 	},
+	externalLinkPrompt: {
+		enable: true, // 点击文章正文里的外部链接时，是否先弹出「即将离开本站」提示
+		whitelist: [
+			// 这些域名以及它们的子域名不弹提示，直接跳转
+			"xieea.top", // 自己的所有站点（blog / widgets 等子域名都算）
+			"github.com", // 几乎每篇教程都要点 GitHub，每次都弹太烦
+		],
+	},
 	favicon: [
 		// 将此数组留空则使用默认 favicon
 		// {

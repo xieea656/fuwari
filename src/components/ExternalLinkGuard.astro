@@ -1,0 +1,240 @@
+---
+import { siteConfig } from "@/config";
+
+const prompt = siteConfig.externalLinkPrompt;
+const whitelistJson = JSON.stringify(prompt?.whitelist ?? []);
+const siteHost = new URL(String(Astro.site ?? "https://blog.xieea.top/")).hostname;
+---
+
+{
+	prompt?.enable && (
+		<div
+			id="ext-link-guard"
+			class="elg"
+			data-whitelist={whitelistJson}
+			data-host={siteHost}
+		>
+			<div class="elg-mask absolute inset-0 bg-black/30 dark:bg-black/60"></div>
+			<div
+				class="absolute inset-0 flex items-center justify-center px-4"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="elg-title"
+			>
+				<div class="elg-panel card-base card-shadow w-full max-w-md px-6 py-5">
+					<!-- 标题：沿用主题弹层的竖条样式（同 DisplaySettings） -->
+					<div
+						id="elg-title"
+						class="flex gap-2 font-bold text-lg text-neutral-900 dark:text-neutral-100 transition relative ml-3
+            before:w-1 before:h-4 before:rounded-md before:bg-[var(--primary)]
+            before:absolute before:-left-3 before:top-[0.33rem]"
+					>
+						即将离开本站
+					</div>
+
+					<p class="mt-3 text-sm opacity-75 leading-relaxed">
+						你正在从 <span class="elg-from font-medium opacity-90">{siteHost}</span>
+						跳到一个外部网站。外部站点的内容不由本站控制，请自行判断是否可信。
+					</p>
+
+					<div class="mt-3 px-3 py-2 rounded-lg font-bold break-all bg-[var(--inline-code-bg)] text-[var(--inline-code-color)] elg-host">
+						example.com
+					</div>
+					<div class="mt-2 text-xs opacity-50 break-all leading-relaxed elg-url"></div>
+
+					<label
+						class="mt-4 flex items-center gap-2 text-sm opacity-75 cursor-pointer select-none"
+					>
+						<input type="checkbox" class="elg-remember accent-[var(--primary)]" />
+						以后不再询问这个网站
+					</label>
+
+					<div class="mt-5 flex items-center justify-end gap-2">
+						<button
+							type="button"
+							class="elg-no btn-plain scale-animation rounded-lg h-10 px-5 font-bold active:scale-95"
+						>
+							返回
+						</button>
+						<button
+							type="button"
+							class="elg-go btn-regular rounded-lg h-10 px-5 gap-2 font-bold active:scale-95 text-[var(--btn-content)]"
+						>
+							继续前往
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+<style>
+	.elg {
+		position: fixed;
+		inset: 0;
+		z-index: 999;
+		opacity: 0;
+		visibility: hidden;
+		/* 关闭：淡出的同时先别消失，visibility 跟着过渡 */
+		transition:
+			opacity 0.18s ease,
+			visibility 0.18s ease;
+	}
+	.elg.elg-open {
+		opacity: 1;
+		visibility: visible;
+		/* 打开：visibility 不参与过渡、立即变 visible，
+		   否则第一帧元素仍算 hidden，浏览器会拒绝给焦点 */
+		transition: opacity 0.18s ease;
+	}
+	.elg-panel {
+		transform: scale(0.94) translateY(8px);
+		transition: transform 0.18s ease;
+	}
+	.elg.elg-open .elg-panel {
+		transform: none;
+	}
+</style>
+
+<script is:inline>
+	(() => {
+		const root = document.getElementById("ext-link-guard");
+		if (!root) return;
+
+		const STORAGE_KEY = "extLinkGuard.allowedHosts";
+		const panel = root.querySelector(".elg-panel");
+		const hostEl = root.querySelector(".elg-host");
+		const urlEl = root.querySelector(".elg-url");
+		const rememberEl = root.querySelector(".elg-remember");
+		const goEl = root.querySelector(".elg-go");
+		const noEl = root.querySelector(".elg-no");
+
+		let whitelist = [];
+		try {
+			whitelist = JSON.parse(root.dataset.whitelist || "[]");
+		} catch (_) {}
+
+		const readAllowed = () => {
+			try {
+				const v = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+				return Array.isArray(v) ? v : [];
+			} catch (_) {
+				return [];
+			}
+		};
+		let allowed = readAllowed();
+
+		// 域名匹配：完全相等或属于它的子域名
+		const matches = (list, hostname) => {
+			const h = hostname.toLowerCase();
+			return list.some((raw) => {
+				const w = String(raw).toLowerCase().replace(/^\.+/, "").replace(/\/.*$/, "");
+				return w !== "" && (h === w || h.endsWith(`.${w}`));
+			});
+		};
+
+		let pending = null;
+		let lastFocus = null;
+
+		const close = () => {
+			root.classList.remove("elg-open");
+			pending = null;
+			if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+			lastFocus = null;
+		};
+
+		const open = (url, hostname, source) => {
+			pending = url;
+			hostEl.textContent = hostname;
+			urlEl.textContent = url;
+			rememberEl.checked = false;
+			lastFocus = source || document.activeElement;
+			root.classList.add("elg-open");
+			// 焦点默认落在「返回」：手滑按回车不会跳出去。
+			// 先强制一次样式重算，万一还是没给上（个别时序情况），下一帧再试一次。
+			void root.offsetHeight;
+			noEl.focus();
+			if (document.activeElement !== noEl) {
+				requestAnimationFrame(() => {
+					if (root.classList.contains("elg-open")) noEl.focus();
+				});
+			}
+		};
+
+		// 捕获阶段拦截，赶在 swup 的页内跳转处理之前
+		document.addEventListener(
+			"click",
+			(e) => {
+				if (root.classList.contains("elg-open")) return;
+				if (e.defaultPrevented || e.button !== 0) return;
+				if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+				const anchor = e.target instanceof Element ? e.target.closest("a[href]") : null;
+				if (!anchor || root.contains(anchor)) return;
+
+				// 只管文章正文里的链接
+				if (!anchor.closest(".custom-md")) return;
+				// 新标签页打开的，人并没有离开本站
+				if (anchor.target && anchor.target !== "_self") return;
+				if (anchor.hasAttribute("download")) return;
+
+				let url;
+				try {
+					url = new URL(anchor.href, location.href);
+				} catch (_) {
+					return;
+				}
+				if (url.protocol !== "http:" && url.protocol !== "https:") return;
+				if (url.hostname === location.hostname) return;
+				if (matches(whitelist, url.hostname) || matches(allowed, url.hostname)) return;
+
+				e.preventDefault();
+				e.stopPropagation();
+				open(url.href, url.hostname, anchor);
+			},
+			true,
+		);
+
+		goEl.addEventListener("click", () => {
+			const target = pending;
+			if (!target) return close();
+			if (rememberEl.checked && hostEl.textContent) {
+				const h = hostEl.textContent.trim().toLowerCase();
+				if (h && !allowed.includes(h)) allowed.push(h);
+				try {
+					localStorage.setItem(STORAGE_KEY, JSON.stringify(allowed));
+				} catch (_) {}
+			}
+			close();
+			location.href = target;
+		});
+
+		noEl.addEventListener("click", close);
+		// 点弹窗以外任何地方都关闭。不能只绑遮罩层：
+		// 居中容器是 absolute inset-0，铺满整屏且盖在遮罩上面，会吃掉这些点击。
+		root.addEventListener("click", (e) => {
+			if (!root.classList.contains("elg-open")) return;
+			if (panel.contains(e.target)) return;
+			close();
+		});
+
+		document.addEventListener("keydown", (e) => {
+			if (!root.classList.contains("elg-open")) return;
+			if (e.key === "Escape") {
+				e.preventDefault();
+				close();
+				return;
+			}
+			// 打开时把 Tab 限制在弹窗内的控件之间
+			if (e.key === "Tab") {
+				const focusables = [rememberEl, noEl, goEl];
+				const i = focusables.indexOf(document.activeElement);
+				e.preventDefault();
+				const step = e.shiftKey ? -1 : 1;
+				const next = focusables[(i + step + focusables.length) % focusables.length];
+				if (next) next.focus();
+			}
+		});
+	})();
+</script>

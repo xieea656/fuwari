@@ -35,6 +35,13 @@ export type SiteConfig = {
 		depth: 1 | 2 | 3;
 	};
 
+	/** 点击文章正文里的外部链接时，先弹出「即将离开本站」确认框 */
+	externalLinkPrompt?: {
+		enable: boolean;
+		/** 这些域名及其子域名直接放行，不弹提示 */
+		whitelist?: string[];
+	};
+
 	favicon: Favicon[];
 };
 
