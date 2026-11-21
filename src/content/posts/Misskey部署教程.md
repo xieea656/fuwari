@@ -1,5 +1,6 @@
 ---
 title: 在服务器上部署 Misskey（保姆级）
+category: 教程
 published: 2026-07-11T16:00:00.000Z
 description: 手把手教你在云服务器上用 Docker 部署 Misskey，包含买服务器、安装 Docker、配置域名等完整步骤。
 tags:
