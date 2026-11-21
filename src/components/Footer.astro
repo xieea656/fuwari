@@ -5,37 +5,58 @@ import { url } from "../utils/url-utils";
 
 const currentYear = new Date().getFullYear();
 
-// 建站日期来自 src/config.ts 的 siteConfig.startDate（'YYYY-MM-DD'，本地时区）。
+// 建站日期来自 src/config.ts 的 siteConfig.startDate（'YYYY-MM-DD'，北京时间 UTC+8）。
 // 留空则不显示「本站已运行」这一行。
 const startDate = siteConfig.startDate ?? "";
 
-const pad = (value: number): string => String(value).padStart(2, "0");
+// 建站日期一律按北京时间（UTC+8）解释。Cloudflare Pages 的构建机跑在 UTC，
+// 如果直接用本地时区 API，服务端兜底文字会算少 8 小时；统一平移到 UTC+8 再用 UTC getter 读即可。
+const SITE_UTC_OFFSET_MINUTES = 8 * 60;
+const SITE_UTC_OFFSET_MS = SITE_UTC_OFFSET_MINUTES * 60 * 1000;
 
-// 构建期先算一遍，作为无 JavaScript 时的兜底文字；页面加载后由脚本接管、每秒刷新。
-const diffParts = (raw: string) => {
+type RuntimeParts = {
+	years: number;
+	days: number;
+	hours: number;
+	minutes: number;
+	seconds: number;
+};
+
+// 建站日当天 00:00 换算成「北京时间墙上时钟」的毫秒值（用 Date 承载，读值一律走 UTC getter）。
+const startWallClock = (raw: string): Date | null => {
 	const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw.trim());
 	if (!match) return null;
-	const start = new Date(
-		Number(match[1]),
-		Number(match[2]) - 1,
-		Number(match[3]),
-		0,
-		0,
-		0,
-		0,
-	);
-	if (Number.isNaN(start.getTime())) return null;
+	const ms = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+	return Number.isFinite(ms) ? new Date(ms) : null;
+};
 
-	const now = new Date();
-	let years = now.getFullYear() - start.getFullYear();
+const diffParts = (start: Date, nowReal: Date): RuntimeParts | null => {
+	// 把真实时刻平移到同一个「墙上时钟」坐标系。
+	const now = new Date(nowReal.getTime() + SITE_UTC_OFFSET_MS);
+	if (
+		Number.isNaN(start.getTime()) ||
+		Number.isNaN(now.getTime()) ||
+		start.getTime() > now.getTime()
+	) {
+		return null;
+	}
+
+	// 用日历年纪，而不是 365.2425 天的近似，闰年才不会把天数算错。
+	let years = now.getUTCFullYear() - start.getUTCFullYear();
 	const anchor = new Date(start.getTime());
-	anchor.setFullYear(start.getFullYear() + years);
-	// 2 月 29 日建站在平年会被 JS 溢出到 3 月 1 日，先归位到 2 月 28 日。
-	if (anchor.getMonth() !== start.getMonth()) anchor.setDate(0);
+	anchor.setUTCFullYear(start.getUTCFullYear() + years);
+	// 2 月 29 日建站遇到平年会溢出到 3 月 1 日，先归位到 2 月 28 日。
+	if (anchor.getUTCMonth() !== start.getUTCMonth()) {
+		anchor.setUTCDate(0);
+	}
 	if (anchor.getTime() > now.getTime()) {
 		years -= 1;
-		anchor.setFullYear(start.getFullYear() + years);
+		anchor.setUTCFullYear(start.getUTCFullYear() + years);
+		if (anchor.getUTCMonth() !== start.getUTCMonth()) {
+			anchor.setUTCDate(0);
+		}
 	}
+
 	let rest = now.getTime() - anchor.getTime();
 	if (rest < 0) rest = 0;
 	const totalSeconds = Math.floor(rest / 1000);
@@ -48,11 +69,15 @@ const diffParts = (raw: string) => {
 	};
 };
 
-const initialParts = startDate ? diffParts(startDate) : null;
+const pad = (value: number): string => String(value).padStart(2, "0");
+
 // 数字用主色 + 中等字重，单位保持页脚的浅灰；服务端先渲染一遍，JavaScript 接管后每秒只改数字。
-// 这里必须是单行 HTML：换行会被折进中间的空白，导致「133 天」被拆到两行。
+// 必须是单行 HTML：换行会被折成中间空白，把「133 天」拆成两行。
 const num = (key: string, value: number | string): string =>
 	`<span data-rt="${key}" class="text-[var(--primary)] font-medium">${value}</span>`;
+
+const startParsed = startDate ? startWallClock(startDate) : null;
+const initialParts = startParsed ? diffParts(startParsed, new Date()) : null;
 
 const initialHtml = initialParts
 	? `${num("years", initialParts.years)} 年 ${num("days", initialParts.days)} 天 ${num("hours", pad(initialParts.hours))} 时 ${num("minutes", pad(initialParts.minutes))} 分 ${num("seconds", pad(initialParts.seconds))} 秒`
@@ -103,23 +128,21 @@ const initialHtml = initialParts
 		const nodes = document.querySelectorAll("[data-site-runtime]");
 		if (nodes.length === 0) return;
 
-		// 按「本地时区 00:00:00」解析建站日，避免 new Date("YYYY-MM-DD") 被当成 UTC 而错开 8 小时。
-		const parseStart = function (raw) {
+		// 与前端一致：建站日期按北京时间（UTC+8）解释，访客在哪个时区看到的读数都一样。
+		const SITE_UTC_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+		const startWallClock = function (raw) {
 			const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec((raw || "").trim());
 			if (!match) return null;
-			const date = new Date(
+			const ms = Date.UTC(
 				Number(match[1]),
 				Number(match[2]) - 1,
 				Number(match[3]),
-				0,
-				0,
-				0,
-				0,
 			);
-			return Number.isNaN(date.getTime()) ? null : date;
+			return Number.isFinite(ms) ? new Date(ms) : null;
 		};
 
-		const start = parseStart(nodes[0].getAttribute("data-start-date"));
+		const start = startWallClock(nodes[0].getAttribute("data-start-date"));
 		if (!start) {
 			for (const node of nodes) node.textContent = "日期待配置";
 			return;
@@ -129,15 +152,16 @@ const initialHtml = initialParts
 			return String(value).padStart(2, "0");
 		};
 
-		// 用日历年纪，而不是 365.2425 天的近似，闰年才不会算错天数。
-		const diffParts = function (now) {
-			let years = now.getFullYear() - start.getFullYear();
+		const diffParts = function (nowReal) {
+			const now = new Date(nowReal.getTime() + SITE_UTC_OFFSET_MS);
+			let years = now.getUTCFullYear() - start.getUTCFullYear();
 			const anchor = new Date(start.getTime());
-			anchor.setFullYear(start.getFullYear() + years);
-			if (anchor.getMonth() !== start.getMonth()) anchor.setDate(0);
+			anchor.setUTCFullYear(start.getUTCFullYear() + years);
+			if (anchor.getUTCMonth() !== start.getUTCMonth()) anchor.setUTCDate(0);
 			if (anchor.getTime() > now.getTime()) {
 				years -= 1;
-				anchor.setFullYear(start.getFullYear() + years);
+				anchor.setUTCFullYear(start.getUTCFullYear() + years);
+				if (anchor.getUTCMonth() !== start.getUTCMonth()) anchor.setUTCDate(0);
 			}
 			let rest = now.getTime() - anchor.getTime();
 			if (rest < 0) rest = 0;
