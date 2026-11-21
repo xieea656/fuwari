@@ -43,6 +43,9 @@ export type SiteConfig = {
 	};
 
 	favicon: Favicon[];
+
+	/** 建站日期，格式 'YYYY-MM-DD'（本地时区）。设置后页脚显示「本站已运行 X 年 X 天 HH 时 MM 分 SS 秒」 */
+	startDate?: string;
 };
 
 export type Favicon = {

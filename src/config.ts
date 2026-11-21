@@ -45,6 +45,9 @@ export const siteConfig: SiteConfig = {
 		//   sizes: '32x32',              // （可选）图标尺寸，仅当有不同尺寸的图标时设置
 		// }
 	],
+	// 建站日期（本地时区，格式 YYYY-MM-DD）：页脚会显示「本站已运行 X 年 X 天 HH 时 MM 分 SS 秒」
+	// 改这一行就能调整起始时间；留空（删掉这行）则不显示该行。
+	startDate: "2026-07-12",
 };
 
 export const navBarConfig: NavBarConfig = {
