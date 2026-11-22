@@ -56,6 +56,11 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Archive, // 归档页链接预设
 		LinkPreset.About, // 关于页链接预设
 		{
+			name: "短链", // 博客自带的短链控制台（blog.xieea.top/s/xxx）
+			url: "/links/", // 内部页面：src/pages/links.astro
+			external: false,
+		},
+		{
 			name: "GitHub", // 自定义链接名称
 			url: "https://github.com/xieea656", // 自定义链接地址，内部链接不应包含 base 路径，系统会自动添加
 			external: true, // 标记为外部链接，将显示外部链接图标并在新标签页打开
@@ -66,7 +71,7 @@ export const navBarConfig: NavBarConfig = {
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/avatar.jpg", // 头像图片路径，相对于 /src 目录；如果以 '/' 开头则相对于 /public 目录
 	name: "晓黎", // 你的名字或昵称
-	bio: "一个普通人", // 个人简介
+	bio: "Life is an order on loan; death is the return that falls due", // 个人简介
 	links: [
 		{
 			name: "Twitter", // 社交链接名称

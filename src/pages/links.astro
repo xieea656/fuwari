@@ -1,0 +1,523 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+
+// 短链控制台：放在博客自己的页面里（导航栏「短链」），
+// 数据接口仍是 /s/api/* 那套（Cloudflare Pages Functions），口令与 /s/admin 共用同一个 localStorage key。
+---
+
+<MainGridLayout title="短链" description="博客内置短链控制台">
+    <Fragment slot="head">
+        <meta name="robots" content="noindex, nofollow" />
+    </Fragment>
+
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+        <div class="card-base z-10 px-6 md:px-9 py-6 relative w-full">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h1 class="text-2xl md:text-3xl font-bold">短链</h1>
+                <button id="sl-logout" class="sl-btn sl-btn-plain hidden" type="button">退出登录</button>
+            </div>
+            <p class="text-50 text-sm mt-1 mb-6">
+                <code class="sl-code">blog.xieea.top/s/短码</code> → 目标地址；短码留空会自动生成 5 位。
+            </p>
+
+            <!-- 登录 -->
+            <div id="sl-login" class="sl-panel">
+                <label class="sl-label" for="sl-token">管理口令</label>
+                <div class="flex flex-wrap gap-2">
+                    <input
+                        id="sl-token"
+                        class="sl-input flex-1 min-w-52"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="粘贴 ADMIN_TOKEN"
+                    />
+                    <button id="sl-login-btn" class="sl-btn sl-btn-primary" type="button">进入</button>
+                </div>
+                <p class="text-50 text-xs mt-2">口令只存在这台浏览器的 localStorage，不会写进页面。</p>
+            </div>
+
+            <!-- 主界面 -->
+            <div id="sl-app" class="hidden">
+                <div class="sl-panel">
+                    <label class="sl-label" for="sl-url">新建短链</label>
+                    <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                        <input id="sl-url" class="sl-input" placeholder="https://… 长地址" />
+                        <input id="sl-slug" class="sl-input" placeholder="短码（可空）" />
+                        <input id="sl-note" class="sl-input" placeholder="备注（可空）" />
+                        <input id="sl-days" class="sl-input" type="number" min="1" placeholder="有效天数（可空=永久）" />
+                    </div>
+                    <button id="sl-create" class="sl-btn sl-btn-primary mt-3" type="button">生成短链</button>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 mt-7 mb-2">
+                    <div class="text-sm text-50">已有短链 <span id="sl-count"></span></div>
+                    <div class="flex gap-2">
+                        <button id="sl-refresh" class="sl-btn sl-btn-plain" type="button">刷新</button>
+                        <button id="sl-more" class="sl-btn sl-btn-plain hidden" type="button">加载更多</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm sl-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">短码</th>
+                                <th class="text-left">目标</th>
+                                <th class="text-right">点击</th>
+                                <th class="text-left hidden sm:table-cell">创建</th>
+                                <th class="text-left">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sl-rows"></tbody>
+                    </table>
+                </div>
+                <p id="sl-empty" class="text-50 text-sm mt-3">还没有短链，上面建一条试试。</p>
+            </div>
+
+            <p id="sl-msg" class="sl-msg"></p>
+        </div>
+    </div>
+</MainGridLayout>
+
+<style>
+    .sl-panel {
+        border: 1px dashed var(--line-divider);
+        border-radius: var(--radius-large);
+        padding: 1rem 1.1rem;
+    }
+    .sl-label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        opacity: 0.55;
+        margin-bottom: 0.45rem;
+        letter-spacing: 0.03em;
+    }
+    .sl-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.82em;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.35rem;
+        background: var(--btn-regular-bg);
+        color: var(--btn-content);
+    }
+    .sl-input {
+        width: 100%;
+        padding: 0.55rem 0.75rem;
+        border-radius: 0.6rem;
+        border: 1px solid var(--line-color);
+        background: var(--card-bg);
+        color: inherit;
+        font: inherit;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .sl-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px oklch(0.7 0.14 var(--hue) / 0.16);
+    }
+    .sl-btn {
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.5rem 0.95rem;
+        border-radius: 0.6rem;
+        border: 1px solid transparent;
+        transition: background-color 0.15s, filter 0.15s, opacity 0.15s;
+        white-space: nowrap;
+    }
+    .sl-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+    .sl-btn-primary {
+        background: var(--primary);
+        color: var(--card-bg);
+    }
+    .sl-btn-primary:hover:not(:disabled) {
+        filter: brightness(1.06);
+    }
+    .sl-btn-plain {
+        background: var(--btn-regular-bg);
+        color: var(--btn-content);
+    }
+    .sl-btn-plain:hover:not(:disabled) {
+        background: var(--btn-regular-bg-hover);
+    }
+    .sl-btn-sm {
+        padding: 0.28rem 0.55rem;
+        font-size: 0.76rem;
+        font-weight: 500;
+    }
+    .sl-btn-danger {
+        background: transparent;
+        color: oklch(0.62 0.19 25);
+        border-color: var(--line-color);
+    }
+    .sl-btn-danger:hover:not(:disabled) {
+        background: oklch(0.62 0.19 25 / 0.12);
+    }
+    .sl-table th {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.45;
+        padding: 0.35rem 0.5rem;
+        border-bottom: 1px solid var(--line-divider);
+    }
+    .sl-table td {
+        padding: 0.6rem 0.5rem;
+        border-bottom: 1px solid var(--line-divider);
+        vertical-align: top;
+    }
+    .sl-slug {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-weight: 600;
+        color: var(--primary);
+        text-decoration: none;
+    }
+    .sl-slug:hover {
+        text-decoration: underline;
+    }
+    .sl-target {
+        display: block;
+        max-width: 27rem;
+        word-break: break-all;
+        opacity: 0.7;
+    }
+    .sl-note {
+        display: block;
+        font-size: 0.76rem;
+        opacity: 0.45;
+        margin-top: 0.15rem;
+    }
+    .sl-actions {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+    .sl-msg {
+        margin-top: 0.9rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        min-height: 1.2em;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .sl-msg.show {
+        opacity: 1;
+    }
+    .sl-msg.err {
+        color: oklch(0.62 0.19 25);
+    }
+    .sl-msg.ok {
+        color: var(--primary);
+    }
+</style>
+
+<script is:inline data-astro-rerun>
+    (function () {
+        // swup 翻页会重跑本脚本：没这个页面就直接退出，避免在别的页面上抛错
+        var app = document.getElementById("sl-app");
+        if (!app) return;
+
+        var TOKEN_KEY = "shortlink-admin-token"; // 和 /s/admin 共用，登一次两边都认
+        var API = "/s/api";
+        var BASE = "/s";
+        var token = localStorage.getItem(TOKEN_KEY) || "";
+        var cursor = null;
+
+        function $(id) {
+            return document.getElementById(id);
+        }
+
+        function esc(value) {
+            return String(value == null ? "" : value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // 目标里常有中文路径，展示时还原成人看得懂的样子
+        function showUrl(value) {
+            try {
+                return decodeURI(value);
+            } catch (e) {
+                return value;
+            }
+        }
+
+        function say(text, kind) {
+            var el = $("sl-msg");
+            if (!el) return;
+            el.textContent = text || "";
+            el.className = "sl-msg" + (text ? " show" : "") + (kind ? " " + kind : "");
+        }
+
+        function api(path, options) {
+            var opts = options || {};
+            var headers = { authorization: "Bearer " + token };
+            if (opts.body) headers["content-type"] = "application/json";
+            return fetch(API + path, {
+                method: opts.method || "GET",
+                headers: headers,
+                body: opts.body ? JSON.stringify(opts.body) : undefined,
+            }).then(function (res) {
+                return res
+                    .json()
+                    .catch(function () {
+                        return {};
+                    })
+                    .then(function (data) {
+                        if (!res.ok) {
+                            var err = new Error((data && data.error) || "HTTP " + res.status);
+                            err.status = res.status;
+                            throw err;
+                        }
+                        return data;
+                    });
+            });
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return "-";
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return "-";
+            var pad = function (n) {
+                return n < 10 ? "0" + n : "" + n;
+            };
+            return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+        }
+
+        function copyText(value) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(value);
+            }
+            var ta = document.createElement("textarea");
+            ta.value = value;
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand("copy");
+            } catch (e) {}
+            document.body.removeChild(ta);
+            return Promise.resolve();
+        }
+
+        function actionBtn(label, cls, onClick) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "sl-btn sl-btn-sm " + cls;
+            b.textContent = label;
+            b.onclick = onClick;
+            return b;
+        }
+
+        function renderRow(item) {
+            var tr = document.createElement("tr");
+
+            var tdSlug = document.createElement("td");
+            var a = document.createElement("a");
+            a.className = "sl-slug";
+            a.href = BASE + "/" + item.slug;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.textContent = item.slug;
+            tdSlug.appendChild(a);
+            tr.appendChild(tdSlug);
+
+            var tdTarget = document.createElement("td");
+            var span = document.createElement("span");
+            span.className = "sl-target";
+            span.textContent = showUrl(item.url);
+            tdTarget.appendChild(span);
+            if (item.note) {
+                var note = document.createElement("span");
+                note.className = "sl-note";
+                note.textContent = item.note;
+                tdTarget.appendChild(note);
+            }
+            tr.appendChild(tdTarget);
+
+            var tdHits = document.createElement("td");
+            tdHits.className = "text-right tabular-nums";
+            tdHits.textContent = String(item.hits || 0);
+            tr.appendChild(tdHits);
+
+            var tdDate = document.createElement("td");
+            tdDate.className = "hidden sm:table-cell text-50";
+            tdDate.textContent =
+                fmtDate(item.createdAt) + (item.expiresAt ? " · 到期 " + fmtDate(item.expiresAt) : "");
+            tr.appendChild(tdDate);
+
+            var tdOps = document.createElement("td");
+            var wrap = document.createElement("div");
+            wrap.className = "sl-actions";
+
+            wrap.appendChild(
+                actionBtn("复制", "sl-btn-plain", function () {
+                    copyText(item.shortUrl).then(
+                        function () {
+                            say("已复制 " + item.shortUrl, "ok");
+                        },
+                        function () {
+                            say("复制失败，手动选中吧", "err");
+                        },
+                    );
+                }),
+            );
+
+            wrap.appendChild(
+                actionBtn("改目标", "sl-btn-plain", function () {
+                    var next = window.prompt("新的目标地址：", showUrl(item.url));
+                    if (!next || next === item.url) return;
+                    api("/links/" + encodeURIComponent(item.slug), { method: "PATCH", body: { url: next } })
+                        .then(function () {
+                            say("已更新 " + item.slug, "ok");
+                            load(true);
+                        })
+                        .catch(function (e) {
+                            say(e.message, "err");
+                        });
+                }),
+            );
+
+            wrap.appendChild(
+                actionBtn("删除", "sl-btn-danger", function () {
+                    if (!window.confirm("删除短链 " + item.slug + " ？删掉后原链接会 404。")) return;
+                    api("/links/" + encodeURIComponent(item.slug), { method: "DELETE" })
+                        .then(function () {
+                            say("已删除 " + item.slug, "ok");
+                            load(true);
+                        })
+                        .catch(function (e) {
+                            say(e.message, "err");
+                        });
+                }),
+            );
+
+            tdOps.appendChild(wrap);
+            tr.appendChild(tdOps);
+            return tr;
+        }
+
+        function load(reset) {
+            if (reset) {
+                cursor = null;
+                $("sl-rows").innerHTML = "";
+            }
+            var query = "?limit=50" + (cursor ? "&cursor=" + encodeURIComponent(cursor) : "");
+            return api("/links" + query).then(function (data) {
+                var rows = $("sl-rows");
+                (data.items || []).forEach(function (item) {
+                    rows.appendChild(renderRow(item));
+                });
+                cursor = data.cursor;
+                $("sl-more").classList.toggle("hidden", !cursor);
+                var total = rows.children.length;
+                $("sl-count").textContent = "（已加载 " + total + " 条" + (cursor ? "，还有更多" : "") + "）";
+                $("sl-empty").classList.toggle("hidden", total > 0);
+                return data;
+            });
+        }
+
+        function enterApp() {
+            $("sl-login").classList.add("hidden");
+            $("sl-app").classList.remove("hidden");
+            $("sl-logout").classList.remove("hidden");
+            load(true).catch(function (e) {
+                if (e.status === 401) {
+                    leaveApp();
+                    say("口令不对，请重新输入", "err");
+                } else {
+                    say(e.message, "err");
+                }
+            });
+        }
+
+        function leaveApp() {
+            token = "";
+            localStorage.removeItem(TOKEN_KEY);
+            $("sl-login").classList.remove("hidden");
+            $("sl-app").classList.add("hidden");
+            $("sl-logout").classList.add("hidden");
+            $("sl-rows").innerHTML = "";
+            $("sl-count").textContent = "";
+        }
+
+        function login() {
+            var value = $("sl-token").value.trim();
+            if (!value) {
+                say("先填口令", "err");
+                return;
+            }
+            token = value;
+            localStorage.setItem(TOKEN_KEY, token);
+            say("");
+            enterApp();
+        }
+
+        $("sl-login-btn").onclick = login;
+        $("sl-token").onkeydown = function (e) {
+            if (e.key === "Enter") login();
+        };
+        $("sl-logout").onclick = function () {
+            leaveApp();
+            say("已退出登录", "ok");
+        };
+        $("sl-refresh").onclick = function () {
+            load(true)
+                .then(function () {
+                    say("已刷新", "ok");
+                })
+                .catch(function (e) {
+                    say(e.message, "err");
+                });
+        };
+        $("sl-more").onclick = function () {
+            load(false).catch(function (e) {
+                say(e.message, "err");
+            });
+        };
+
+        $("sl-create").onclick = function () {
+            var url = $("sl-url").value.trim();
+            if (!url) {
+                say("先填目标地址", "err");
+                return;
+            }
+            var body = { url: url };
+            var slug = $("sl-slug").value.trim();
+            var note = $("sl-note").value.trim();
+            var days = $("sl-days").value.trim();
+            if (slug) body.slug = slug;
+            if (note) body.note = note;
+            if (days) body.expiresInDays = Number(days);
+
+            var btn = $("sl-create");
+            btn.disabled = true;
+            api("/links", { method: "POST", body: body })
+                .then(function (item) {
+                    $("sl-url").value = "";
+                    $("sl-slug").value = "";
+                    $("sl-note").value = "";
+                    $("sl-days").value = "";
+                    say("已生成 " + item.shortUrl, "ok");
+                    copyText(item.shortUrl).catch(function () {});
+                    load(true);
+                })
+                .catch(function (e) {
+                    say(e.message, "err");
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                });
+        };
+
+        // 已经登过就直接进（localStorage 里还留着口令）
+        if (token) enterApp();
+    })();
+</script>
