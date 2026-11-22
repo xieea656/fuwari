@@ -3,6 +3,11 @@ title: AstrBot 使用教程：配置微信/QQ官方接口与AI聊天
 category: 教程
 published: 2026-10-06
 description: 从零开始配置 AstrBot，使用微信或 QQ 官方接口与 AI 聊天，包含安装步骤、渠道配置和模型选择。
+tags:
+  - AstrBot
+  - Docker
+  - QQ
+  - 微信
 ---
 文章更新与 2016/10/6
 最近研究聊天机器人，看到astrbot，于是出个教程

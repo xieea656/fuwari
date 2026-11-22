@@ -3,6 +3,9 @@ title: node.js安装教程
 category: 教程
 published: 2026-07-25T16:00:00.000Z
 description: 在 Windows、Linux、macOS 上安装 Node.js 的完整教程，包含 LTS 版本选择、环境变量配置和版本管理。
+tags:
+  - Node.js
+  - 环境配置
 ---
 
 ## Windows

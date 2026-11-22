@@ -4,6 +4,12 @@ published: 2026-11-21
 description: 面向完全新手的 Fuwari 博客部署教程：用 GitHub 模板创建仓库、本地安装 Git/Node/pnpm、克隆并运行开发服务器、修改站点与个人信息、撰写文章并用 Cloudflare Pages 发布（可选绑定自定义域名）。
 category: 教程
 draft: false
+tags:
+  - Fuwari
+  - Astro
+  - Cloudflare
+  - GitHub
+  - 建站
 ---
 # 前言
 如何开始写博客？这是我的回答。  

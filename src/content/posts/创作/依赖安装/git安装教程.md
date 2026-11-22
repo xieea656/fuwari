@@ -3,6 +3,9 @@ title: git安装教程
 category: 教程
 published: 2026-07-25T16:00:00.000Z
 description: 在 Windows、Linux、macOS 上安装 Git 的完整教程，包含下载链接、安装步骤和常见配置。
+tags:
+  - Git
+  - 环境配置
 ---
 
 ## Windows

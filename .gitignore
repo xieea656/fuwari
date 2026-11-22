@@ -29,3 +29,7 @@ yarn.lock
 # ide
 .idea
 *.iml
+
+# Obsidian 工作区配置（不要把 vault 配置塞进 content 目录，会让 astro build 的 Tailwind 编译报错）
+.obsidian/
+.trash/
