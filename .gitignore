@@ -33,3 +33,9 @@ yarn.lock
 # Obsidian 工作区配置（不要把 vault 配置塞进 content 目录，会让 astro build 的 Tailwind 编译报错）
 .obsidian/
 .trash/
+
+# Cloudflare Pages Functions 本地变量
+.dev.vars
+
+# Cloudflare Pages 本地运行缓存
+.wrangler/

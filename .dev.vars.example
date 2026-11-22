@@ -1,0 +1,5 @@
+# 复制成 .dev.vars 后本地 `wrangler pages dev` 会自动读取（.dev.vars 已在 .gitignore）
+ADMIN_TOKEN=dev-token
+HOME_URL=https://blog.xieea.top
+SITE_NAME=晓黎的短链
+COUNT_HITS=1
