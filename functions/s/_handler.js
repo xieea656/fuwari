@@ -190,7 +190,7 @@ export function createShortlinkHandler({ basePath = "" } = {}) {
 		if (!body) return json({ error: "请求体必须是 JSON" }, 400);
 
 		const selfHost = new URL(request.url).hostname.toLowerCase();
-		const target = validateTarget(body.url, { selfHost });
+		const target = validateTarget(body.url, { selfHost, selfPrefix: prefix });
 		if (!target.ok) return json({ error: target.error }, 400);
 
 		let slug = normalizeSlug(body.slug);
@@ -237,7 +237,7 @@ export function createShortlinkHandler({ basePath = "" } = {}) {
 
 		if (body.url !== undefined) {
 			const selfHost = new URL(request.url).hostname.toLowerCase();
-			const target = validateTarget(body.url, { selfHost });
+			const target = validateTarget(body.url, { selfHost, selfPrefix: prefix });
 			if (!target.ok) return json({ error: target.error }, 400);
 			record.url = target.url;
 		}

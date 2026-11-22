@@ -55,10 +55,16 @@ export const randomSlug = (length = 5) => {
 
 /**
  * 校验目标 URL。
- * 只允许 http/https，拒绝自环（指向短链自己或本站子域），拒绝超长。
- * @returns {{ok: true, url: string} | {ok: false, error: string}}
+ * 只允许 http/https，拒绝超长；并且拒绝指回短链自己的跳转路径（否则死循环）。
+ *
+ * selfPrefix 是短链挂载的前缀（博客内嵌版是 "/s"）。因为短链和博客共用一个域名，
+ * 只能拦「指回 /s/xxx」这种真死循环；指向博客其它页面（/about/ 之类）是完全正常的用法。
+ * selfPrefix 为空表示短链挂在域名根路径（独立 Worker 版），此时任何自身域名都视为循环。
  */
-export const validateTarget = (raw, { selfHost = "", maxLength = 2048 } = {}) => {
+export const validateTarget = (
+	raw,
+	{ selfHost = "", selfPrefix = "", maxLength = 2048 } = {},
+) => {
 	const value = String(raw ?? "").trim();
 	if (!value) return { ok: false, error: "url 不能为空" };
 	if (value.length > maxLength) return { ok: false, error: `url 太长（> ${maxLength} 字符）` };
@@ -76,7 +82,12 @@ export const validateTarget = (raw, { selfHost = "", maxLength = 2048 } = {}) =>
 
 	const host = parsed.hostname.toLowerCase();
 	if (selfHost && host === selfHost) {
-		return { ok: false, error: "不能指向短链服务自己，会形成死循环" };
+		const path = parsed.pathname;
+		const loopsIntoSelf =
+			!selfPrefix || path === selfPrefix || path.startsWith(`${selfPrefix}/`);
+		if (loopsIntoSelf) {
+			return { ok: false, error: "不能指回短链自己的跳转路径，会形成死循环" };
+		}
 	}
 
 	return { ok: true, url: parsed.toString() };
