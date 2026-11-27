@@ -1,43 +1,60 @@
 ---
 import { Icon } from "astro-icon/components";
-import TutorialIndex from "@components/widget/TutorialIndex.astro";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import { depLabel, tutorialBySlug, tutorialGroups, tutorialUrl } from "../data/tutorial-index";
+import {
+	getTutorialGroups,
+	getTutorialShortUrl,
+	getTutorialUrl,
+	tutorialTitleOf,
+} from "../utils/tutorial-utils";
 
 /**
- * /tutorials/ —— 「基础教程」分区页
+ * /tutorials/ —— 「基础教程」分区目录
  *
- * 博客分成两部分：这一页是「基础教程」那一部分，不是文章流、也不进文章列表。
- * 它不是文章，而是一份人工维护的目录；所有入口走短链 /s/<slug>，
- * 避免正文里出现一长串 percent-encoded 中文路径。
- * 左下方侧边栏在这一页换成「带说明的索引」（MainGridLayout 的 sidebar 属性控制），
- * 博客那边（首页/文章页/归档页）保持旧版「分类 + 标签」。
+ * 博客分成两部分：
+ *   ① 博客（首页/归档/文章）—— 侧边栏是分类 + 标签，内容只有 posts 集合
+ *   ② 基础教程（本页 + /tutorials/<文件名>/）—— 侧边栏换成索引，内容只有 tutorials 集合
+ *
+ * 两套内容用两个独立的 Astro content collection，互不混：
+ *   src/content/posts/*.md      → 博客文章
+ *   src/content/tutorials/*.md  → 基础教程
+ * 想搬一篇教程过来，只要把 .md 挪进 tutorials/ 目录，这里就自动出现。
  */
+
+const groups = await getTutorialGroups();
+const all = groups.flatMap((g) => g.items);
+const total = all.length;
 ---
 
-<MainGridLayout title="基础教程" description="安装与使用教程索引：先装基础依赖，再照着教程跑起来" sidebar="tutorials">
+<MainGridLayout
+    title="基础教程"
+    description="安装与使用教程目录：先装基础依赖，再照着教程跑起来"
+    sidebar="tutorials"
+>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-6 md:px-9 py-7 relative w-full">
             <!-- 用途说明 -->
             <div class="flex items-start gap-3">
-                <div
-                    class="meta-icon shrink-0 !w-10 !h-10 !rounded-xl"
-                    aria-hidden="true"
-                >
-                    <Icon name="material-symbols:account-tree-rounded" class="text-xl"></Icon>
+                <div class="meta-icon shrink-0 !w-10 !h-10 !rounded-xl" aria-hidden="true">
+                    <Icon name="material-symbols:menu-book-rounded" class="text-xl"></Icon>
                 </div>
                 <div class="min-w-0">
                     <h1 class="text-2xl md:text-3xl font-bold leading-tight">基础教程</h1>
-                    <p class="text-50 text-sm mt-1">和博客正文分开的一栏：这里只有「怎么装、怎么用」。</p>
+                    <p class="text-50 text-sm mt-1">
+                        和博客正文分开的一栏：这里只有「怎么装、怎么用」，不放随笔和碎碎念。
+                    </p>
                 </div>
             </div>
 
-            <div class="mt-5 rounded-[var(--radius-large)] border border-dashed border-[var(--line-divider)] px-4 py-3.5">
+            <div
+                class="mt-5 rounded-[var(--radius-large)] border border-dashed border-[var(--line-divider)] px-4 py-3.5"
+            >
                 <p class="text-[0.875rem] leading-relaxed text-75">
-                    这一栏和博客文章是两个部分：博客那边照旧是文章流，这里按
+                    这一栏跟博客是两个部分：博客那边照旧是文章流，这里按
                     <span class="text-[var(--primary)] font-medium">基础依赖 → 安装教程 → 使用教程</span>
-                    三层整理，只放「装什么、怎么用」。
-                    每条都标了前置依赖，点标题通过短链 <code class="sl-code">/s/短码</code> 打开对应文章。
+                    分组，共 <span class="text-[var(--primary)] font-medium">{total}</span> 篇。
+                    每篇都标了前置依赖，点标题直接进教程页；正文里引用别篇时用短链
+                    <code class="sl-code">/s/短码</code> 跳转。
                 </p>
                 <p class="text-50 text-xs mt-2 leading-relaxed">
                     建议顺序：先把「基础依赖」装齐，再按「安装教程」逐个来，最后看「使用教程」。
@@ -45,32 +62,35 @@ import { depLabel, tutorialBySlug, tutorialGroups, tutorialUrl } from "../data/t
                 </p>
             </div>
 
-            <!-- 分组 -->
             {
-                tutorialGroups.map((group, gi) => (
-                    <section id={group.id} class="mt-8 scroll-mt-24">
+                groups.map((group) => (
+                    <section id={group.name === "基础依赖" ? "base" : group.name === "安装教程" ? "install" : group.name === "使用教程" ? "usage" : "more"} class="mt-8 scroll-mt-24">
                         <div class="flex flex-wrap items-baseline gap-2">
                             <h2 class="text-xl font-bold">{group.name}</h2>
-                            <span class="text-50 text-xs">{group.hint}</span>
-                            <span class="ml-auto text-50 text-xs tabular-nums">
-                                {group.items.length} 篇
+                            <span class="text-50 text-xs">
+                                {group.name === "基础依赖"
+                                    ? "装一次就够，后面所有教程都要先有它"
+                                    : group.name === "安装教程"
+                                      ? "照着一步步跑起来的那种"
+                                      : "装好之后，怎么真正用起来"}
                             </span>
+                            <span class="ml-auto text-50 text-xs tabular-nums">{group.items.length} 篇</span>
                         </div>
                         <div class="mt-3 grid gap-3 sm:grid-cols-2">
                             {group.items.map((item) => (
                                 <a
-                                    href={tutorialUrl(item.slug)}
-                                    class="group transition rounded-[var(--radius-large)] border border-[var(--line-divider)] bg-[var(--btn-plain-bg-hover)]/0
+                                    href={getTutorialUrl(item.slug)}
+                                    class="group transition rounded-[var(--radius-large)] border border-[var(--line-divider)]
                                            hover:bg-[var(--btn-plain-bg-hover)] px-4 py-3 no-underline"
                                 >
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0">
                                             <div class="font-semibold text-[0.95rem] transition group-hover:text-[var(--primary)]">
-                                                {item.title}
+                                                {item.data.title}
                                             </div>
-                                            {item.summary && (
+                                            {item.data.description && (
                                                 <div class="text-50 text-[0.8rem] leading-snug mt-1">
-                                                    {item.summary}
+                                                    {item.data.description}
                                                 </div>
                                             )}
                                         </div>
@@ -81,12 +101,12 @@ import { depLabel, tutorialBySlug, tutorialGroups, tutorialUrl } from "../data/t
                                     </div>
 
                                     <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
-                                        {item.deps && item.deps.length > 0 ? (
+                                        {item.data.deps.length > 0 ? (
                                             <>
                                                 <span class="text-50 text-[0.7rem] uppercase tracking-wide">前置</span>
-                                                {item.deps.map((dep) => (
+                                                {item.data.deps.map((dep) => (
                                                     <span class="text-[0.72rem] px-2 py-0.5 rounded-md bg-[var(--btn-regular-bg)] text-[var(--btn-content)]">
-                                                        {depLabel(dep)}
+                                                        {tutorialTitleOf(all, dep)}
                                                     </span>
                                                 ))}
                                             </>
@@ -96,7 +116,7 @@ import { depLabel, tutorialBySlug, tutorialGroups, tutorialUrl } from "../data/t
                                             </span>
                                         )}
                                         <span class="ml-auto font-mono text-[0.7rem] text-50 opacity-70">
-                                            /s/{item.slug}
+                                            {getTutorialShortUrl(item)}
                                         </span>
                                     </div>
                                 </a>
@@ -106,13 +126,22 @@ import { depLabel, tutorialBySlug, tutorialGroups, tutorialUrl } from "../data/t
                 ))
             }
 
-            <!-- 从哪开始 -->
+            {
+                groups.length === 0 && (
+                    <p class="text-50 text-sm mt-8">
+                        还没有教程。把 .md 放进 <code class="sl-code">src/content/tutorials/</code> 就会出现在这里。
+                    </p>
+                )
+            }
+
             <section class="mt-9">
                 <h2 class="text-lg font-bold">不知道从哪开始？</h2>
                 <div class="mt-2 flex flex-wrap gap-2">
-                    <a href={tutorialUrl("git")} class="sl-pill">① 装 Git</a>
-                    <a href={tutorialUrl("node")} class="sl-pill">② 装 Node.js</a>
-                    <a href={tutorialUrl("blog")} class="sl-pill">③ 部署自己的博客</a>
+                    {groups.length > 0 && groups[0].items[0] && (
+                        <a href={getTutorialUrl(groups[0].items[0].slug)} class="sl-pill">
+                            从「{groups[0].items[0].data.title}」开始
+                        </a>
+                    )}
                     <a href="/" class="sl-pill">← 回到博客</a>
                     <a href="/archive/" class="sl-pill">看全部文章</a>
                 </div>

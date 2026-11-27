@@ -1,0 +1,110 @@
+---
+import path from "node:path";
+import Markdown from "@components/misc/Markdown.astro";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
+import { getTutorialEntries, getTutorialShortUrl, tutorialTitleOf } from "../../utils/tutorial-utils";
+
+/**
+ * 单篇基础教程：/tutorials/<文件名>/
+ *
+ * 和文章页（src/pages/posts/[...slug].astro）是两套独立路由：
+ * 不显示分类/标签/上一篇下一篇/版权块，侧边栏固定为教程索引。
+ */
+
+export async function getStaticPaths() {
+	const entries = await getTutorialEntries();
+	return entries.map((entry) => ({
+		params: { slug: entry.slug },
+		props: { entry },
+	}));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await entry.render();
+const { remarkPluginFrontmatter } = await entry.render();
+
+const allEntries = await getTutorialEntries();
+const depTitles = entry.data.deps.map((slug) => tutorialTitleOf(allEntries, slug));
+const shortUrl = getTutorialShortUrl(entry);
+---
+
+<MainGridLayout
+    title={entry.data.title}
+    description={entry.data.description}
+    sidebar="tutorials"
+    headings={headings}
+>
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <div id="tutorial-container" class="card-base z-10 px-6 md:px-9 pt-6 pb-6 relative w-full">
+            <!-- 面包屑：明确它属于「基础教程」这一部分 -->
+            <div class="flex flex-wrap items-center gap-1.5 text-[0.78rem] text-50 mb-3">
+                <a href="/tutorials/" class="transition hover:text-[var(--primary)]">基础教程</a>
+                <Icon name="material-symbols:chevron-right-rounded" class="text-[0.9rem]" />
+                <span class="text-[var(--primary)]">{entry.data.group}</span>
+            </div>
+
+            <h1 class="text-2xl md:text-3xl font-bold leading-tight">{entry.data.title}</h1>
+            {
+                entry.data.description && (
+                    <p class="text-50 text-sm mt-2 leading-relaxed">{entry.data.description}</p>
+                )
+            }
+
+            <!-- 元信息：阅读量/字数 + 前置依赖 -->
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-[0.8rem] text-50">
+                <span class="flex items-center gap-1.5">
+                    <Icon name="material-symbols:notes-rounded" class="text-[1rem]" />
+                    {remarkPluginFrontmatter.words} 字
+                    · 约 {remarkPluginFrontmatter.minutes} 分钟
+ </span>
+                {
+                    depTitles.length > 0 && (
+                        <span class="flex flex-wrap items-center gap-1.5">
+                            <span class="uppercase tracking-wide text-[0.7rem]">前置</span>
+                            {depTitles.map((title, i) => (
+                                <a
+                                    href={`/s/${entry.data.deps[i]}`}
+                                    class="rounded-md px-2 py-0.5 bg-[var(--btn-regular-bg)] text-[var(--btn-content)] transition hover:text-[var(--primary)]"
+                                >
+                                    {title}
+                                </a>
+                            ))}
+                        </span>
+                    )
+                }
+                <a
+                    href={shortUrl}
+                    class="ml-auto font-mono text-[0.72rem] text-50 opacity-70 transition hover:text-[var(--primary)] hover:opacity-100"
+                >
+                    {shortUrl}
+                </a>
+            </div>
+
+            <div class="border-[var(--line-divider)] border-dashed border-b-[1px] my-5"></div>
+
+            <Markdown class="markdown-content onload-animation">
+                <Content />
+            </Markdown>
+
+            <!-- 回到目录 -->
+            <div class="mt-8 flex flex-wrap gap-2">
+                <a
+                    href="/tutorials/"
+                    class="transition inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[0.85rem] font-medium
+                           bg-[var(--btn-regular-bg)] text-[var(--btn-content)] hover:bg-[var(--btn-regular-bg-hover)] hover:text-[var(--primary)]"
+                >
+                    <Icon name="material-symbols:arrow-back-rounded" class="text-[1rem]" />
+                    回到基础教程目录
+                </a>
+                <a
+                    href="/"
+                    class="transition inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[0.85rem] font-medium
+                           bg-[var(--btn-regular-bg)] text-[var(--btn-content)] hover:bg-[var(--btn-regular-bg-hover)] hover:text-[var(--primary)]"
+                >
+                    回到博客首页
+                </a>
+            </div>
+        </div>
+    </div>
+</MainGridLayout>

@@ -1,13 +1,14 @@
 ---
-title: node.js安装教程
-category: 教程
+title: Node.js 安装
 published: 2026-07-25T16:00:00.000Z
-description: 在 Windows、Linux、macOS 上安装 Node.js 的完整教程，包含 LTS 版本选择、环境变量配置和版本管理。
+description: Windows 用安装包、Linux 用 nvm 装 Node.js，顺便把版本切换也解决掉，最后验证 node/npm。
+group: 基础依赖
+order: 2
+short: node
 tags:
   - Node.js
   - 环境配置
 ---
-
 ## Windows
 1. 进入官网 [Node.js — 下载 Node.js®](https://nodejs.org/zh-cn/download)
    ![node.js下载页面图片](https://origin.picgo.net/2026/10/10/20261010214432212ee551b0ee9c43536.png)

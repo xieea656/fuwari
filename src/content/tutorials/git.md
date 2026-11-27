@@ -1,13 +1,14 @@
 ---
-title: git安装教程
-category: 教程
+title: Git 安装
 published: 2026-07-25T16:00:00.000Z
-description: 在 Windows、Linux、macOS 上安装 Git 的完整教程，包含下载链接、安装步骤和常见配置。
+description: 在 Windows、Linux、macOS 上安装 Git，包含下载与包管理器两种方式，最后验证版本。
+group: 基础依赖
+order: 1
+short: git
 tags:
   - Git
   - 环境配置
 ---
-
 ## Windows
 1. 打开git for Windows [Git - Install for Windows](https://git-scm.com/install/windows)
 2. ![git for Windows页面图片](https://origin.picgo.net/2026/10/10/20261010214056204439d1e429eae7eab.png)

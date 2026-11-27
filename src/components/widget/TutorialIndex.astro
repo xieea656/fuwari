@@ -1,38 +1,41 @@
 ---
 import { Icon } from "astro-icon/components";
-import { tutorialBySlug, tutorialGroups, tutorialUrl } from "../../data/tutorial-index";
+import { getTutorialGroups, getTutorialUrl } from "../../utils/tutorial-utils";
 import WidgetLayout from "./WidgetLayout.astro";
 
 /**
- * 侧边栏「索引」：取代原来的「分类 / 标签」。
+ * 侧边栏「索引」：只在基础教程那一部分（/tutorials/ 系列页面）出现。
  *
- * 内容就是 src/data/tutorial-index.ts 里那份目录；链接统一走短链 /s/<slug>，
- * 所以站内引用不会出现一长串 percent-encoded 中文路径。
+ * 数据来自 src/content/tutorials/ 这个独立集合，不是首页那份分类/标签，
+ * 也不是手写死数据 —— 你往目录里丢 .md，这里自动多一行。
  */
 
 interface Props {
 	class?: string;
 	style?: string;
-	/** 紧凑模式：只列标题，不显示一句话说明（首页侧边栏用它） */
-	compact?: boolean;
-	/** 分组标题是否做成 /tutorials/#id 的页内跳转（基础教程页用） */
+	/** 是否把分组标题做成 /tutorials/#<锚点> 的跳转 */
 	anchors?: boolean;
 }
 
-const { compact = true, anchors = false } = Astro.props;
+const { anchors = true } = Astro.props;
 const className = Astro.props.class;
 const style = Astro.props.style;
+
+const groups = await getTutorialGroups();
+
+const anchorOf = (name: string): string =>
+	name === "基础依赖" ? "base" : name === "安装教程" ? "install" : name === "使用教程" ? "usage" : "more";
 ---
 
 <WidgetLayout name="索引" id="tutorial-index" class={className} style={style}>
     <div class="flex flex-col gap-1 pb-1">
         {
-            tutorialGroups.map((group) => (
+            groups.map((group) => (
                 <div class="mb-1">
                     <div class="flex items-center gap-1.5 px-2 py-1.5">
                         {anchors ? (
                             <a
-                                href={`/tutorials/#${group.id}`}
+                                href={`/tutorials/#${anchorOf(group.name)}`}
                                 class="text-[0.72rem] font-bold tracking-wide uppercase text-50 transition hover:text-[var(--primary)]"
                             >
                                 {group.name}
@@ -47,9 +50,9 @@ const style = Astro.props.style;
                     {
                         group.items.map((item) => (
                             <a
-                                href={tutorialUrl(item.slug)}
+                                href={getTutorialUrl(item.slug)}
                                 class="transition rounded-lg flex items-start gap-2 px-2 py-1.5 hover:bg-[var(--btn-plain-bg-hover)] group"
-                                aria-label={`打开教程：${item.title}`}
+                                aria-label={`打开教程：${item.data.title}`}
                             >
                                 <Icon
                                     name="material-symbols:chevron-right-rounded"
@@ -57,11 +60,11 @@ const style = Astro.props.style;
                                 />
                                 <span class="min-w-0">
                                     <span class="block text-[0.875rem] leading-snug text-neutral-700 dark:text-neutral-300 transition group-hover:text-[var(--primary)]">
-                                        {item.title}
+                                        {item.data.title}
                                     </span>
-                                    {!compact && item.summary && (
-                                        <span class="block text-[0.75rem] text-50 leading-snug mt-0.5">
-                                            {item.summary}
+                                    {item.data.short && (
+                                        <span class="block font-mono text-[0.68rem] text-50 opacity-70 mt-0.5">
+                                            /s/{item.data.short}
                                         </span>
                                     )}
                                 </span>
@@ -71,11 +74,18 @@ const style = Astro.props.style;
                 </div>
             ))
         }
+        {
+            groups.length === 0 && (
+                <p class="text-50 text-[0.78rem] px-2 py-2 leading-relaxed">
+                    还没有教程。把 .md 放进 src/content/tutorials/ 就会出现在这里。
+                </p>
+            )
+        }
         <a
             href="/tutorials/"
             class="transition mt-1 rounded-lg flex items-center justify-between px-2 py-2 hover:bg-[var(--btn-plain-bg-hover)] group"
         >
-            <span class="text-[0.8rem] font-medium text-[var(--primary)]">打开基础教程目录</span>
+            <span class="text-[0.8rem] font-medium text-[var(--primary)]">打开完整目录</span>
             <Icon
                 name="material-symbols:arrow-forward-rounded"
                 class="text-[1rem] text-[var(--primary)] transition group-hover:translate-x-0.5"

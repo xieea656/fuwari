@@ -25,7 +25,7 @@ const { variant = "default" } = Astro.props;
     </div>
     <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
         {variant === "tutorials" ? (
-            <TutorialIndex class="onload-animation" style="animation-delay: 150ms" compact={false} anchors={true}></TutorialIndex>
+            <TutorialIndex class="onload-animation" style="animation-delay: 150ms" anchors={true}></TutorialIndex>
         ) : (
             <>
                 <Categories class="onload-animation" style="animation-delay: 150ms"></Categories>
