@@ -23,8 +23,8 @@ interface Props {
 	setOGTypeArticle?: boolean;
 	headings?: MarkdownHeading[];
 	canonical?: string;
-	/** 侧边栏形态：default（分类+标签）/ index（教程索引）/ deps（依赖目录） */
-	sidebar?: "default" | "index" | "deps";
+	/** 侧边栏形态：default（分类+标签，博客侧）/ tutorials（教程索引，基础教程页） */
+	sidebar?: "default" | "tutorials";
 }
 
 const {

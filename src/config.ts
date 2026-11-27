@@ -56,8 +56,8 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Archive, // 归档页链接预设
 		LinkPreset.About, // 关于页链接预设
 		{
-			name: "依赖", // 依赖与教程索引（src/pages/deps.astro）
-			url: "/deps/",
+			name: "基础教程", // 教程分区（src/pages/tutorials.astro），与博客文章流分开
+			url: "/tutorials/",
 			external: false,
 		},
 		{

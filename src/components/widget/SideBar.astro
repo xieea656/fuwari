@@ -10,11 +10,10 @@ interface Props {
 	headings?: MarkdownHeading[];
 	/**
 	 * 侧边栏形态：
-	 *   default —— 分类 + 标签（文章页/归档页）
-	 *   index   —— 教程索引（首页把「分类」「标签」换成索引）
-	 *   deps    —— 依赖目录（/deps/ 页面用，带说明并支持页内跳转）
+	 *   default   —— 分类 + 标签（博客侧：首页/文章页/归档页，保持旧版样子）
+	 *   tutorials —— 教程索引（/tutorials/ 基础教程页专用，带说明并支持页内跳转）
 	 */
-	variant?: "default" | "index" | "deps";
+	variant?: "default" | "tutorials";
 }
 
 const className = Astro.props.class;
@@ -25,10 +24,8 @@ const { variant = "default" } = Astro.props;
         <Profile></Profile>
     </div>
     <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
-        {variant === "deps" ? (
+        {variant === "tutorials" ? (
             <TutorialIndex class="onload-animation" style="animation-delay: 150ms" compact={false} anchors={true}></TutorialIndex>
-        ) : variant === "index" ? (
-            <TutorialIndex class="onload-animation" style="animation-delay: 150ms" compact={true}></TutorialIndex>
         ) : (
             <>
                 <Categories class="onload-animation" style="animation-delay: 150ms"></Categories>

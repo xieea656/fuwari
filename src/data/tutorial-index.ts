@@ -1,5 +1,5 @@
 /**
- * 教程索引 —— 首页侧边栏「索引」和 /deps/ 页面共用这一份数据
+ * 教程索引 —— /tutorials/ 基础教程页和它的侧边栏共用这一份数据
  *
  * 为什么单独抽成数据：侧边栏、依赖教程页、将来可能的 RSS/搜索都要用同一套
  * 分组与链接，散落在模板里改一处漏一处。
@@ -19,7 +19,7 @@ export type TutorialItem = {
 };
 
 export type TutorialGroup = {
-	/** 锚点 id，/deps/#<id> 可直达 */
+	/** 锚点 id，/tutorials/#<id> 可直达 */
 	id: string;
 	name: string;
 	/** 分组说明 */

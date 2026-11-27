@@ -18,7 +18,7 @@ const { page } = Astro.props;
 const len = page.data.length;
 ---
 
-<MainGridLayout sidebar="index">
+<MainGridLayout>
     {page.currentPage === 1 && (
         <Heatmap
             class="mb-3 onload-animation"

@@ -15,7 +15,7 @@ interface Props {
 	style?: string;
 	/** 紧凑模式：只列标题，不显示一句话说明（首页侧边栏用它） */
 	compact?: boolean;
-	/** 分组标题是否做成 /deps/#id 的页内跳转（/deps/ 页面用） */
+	/** 分组标题是否做成 /tutorials/#id 的页内跳转（基础教程页用） */
 	anchors?: boolean;
 }
 
@@ -32,7 +32,7 @@ const style = Astro.props.style;
                     <div class="flex items-center gap-1.5 px-2 py-1.5">
                         {anchors ? (
                             <a
-                                href={`/deps/#${group.id}`}
+                                href={`/tutorials/#${group.id}`}
                                 class="text-[0.72rem] font-bold tracking-wide uppercase text-50 transition hover:text-[var(--primary)]"
                             >
                                 {group.name}
@@ -72,10 +72,10 @@ const style = Astro.props.style;
             ))
         }
         <a
-            href="/deps/"
+            href="/tutorials/"
             class="transition mt-1 rounded-lg flex items-center justify-between px-2 py-2 hover:bg-[var(--btn-plain-bg-hover)] group"
         >
-            <span class="text-[0.8rem] font-medium text-[var(--primary)]">查看完整依赖关系</span>
+            <span class="text-[0.8rem] font-medium text-[var(--primary)]">打开基础教程目录</span>
             <Icon
                 name="material-symbols:arrow-forward-rounded"
                 class="text-[1rem] text-[var(--primary)] transition group-hover:translate-x-0.5"
