@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "include": [
+    "/s",
+    "/s/*",
+    "/deps",
+    "/deps/*",
+    "/posts/创作/*",
+    "/posts/%E5%88%9B%E4%BD%9C/*"
+  ],
+  "exclude": []
+}

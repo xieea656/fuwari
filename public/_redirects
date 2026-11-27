@@ -1,11 +1,8 @@
-# 老地址 → 新地址（301 永久跳转：搜索引擎会把权重和索引挪到新 URL，不要用 302）
-# Git / Node.js 两篇原本在 src/content/posts/创作/依赖安装/，现在搬进 src/content/tutorials/
-# 用 * 后缀匹配：既能盖住带尾斜杠的 /git安装教程/，也能盖住不带斜杠的写法
-# 中文原样 + percent-encoded 两种形式都写，Cloudflare 拿到的 path 可能是任意一种
-/posts/创作/依赖安装/git安装教程*  /tutorials/git/  301
-/posts/%E5%88%9B%E4%BD%9C/%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85/git%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B*  /tutorials/git/  301
-/posts/创作/依赖安装/node.js安装教程*  /tutorials/node/  301
-/posts/%E5%88%9B%E4%BD%9C/%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85/node.js%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B*  /tutorials/node/  301
-# /deps/ 页面已改名 /tutorials/
-/deps/*  /tutorials/  301
+# 老地址 → 新地址（301 永久跳转，搜索引擎会把权重与索引挪到新 URL）
+#
+# 注意：带中文的源路径在 Cloudflare Pages 的 _redirects 里匹配不可靠
+# （线上实测 /posts/.../git安装教程/ 会 404，而 /deps/ 正常），
+# 所以中文那几条放到 functions/_middleware.js 里做（pathname 已解码，最稳）。
+# 这里只保留纯 ASCII 路径。
+/deps/  /tutorials/  301
 /deps  /tutorials/  301
