@@ -63,7 +63,7 @@ weflow 可以导出微信聊天记录   如果可以给这个项目点个star吧
 **向量嵌入和重排序模型的选择，会一定程度上影响记忆的质量。**
    最好打开**使用远程向量服务**，然后填一个其他的向量模型，这里我用的是硅基流动的千问embedding模型，向量模型调用量不大
    你也可以选择白嫖cloudfare workers ai 
-   [白嫖couldflare的embedding模型 - 晓黎の小破站](https://blog.xieea.top/posts/astrbot/%E7%99%BD%E5%AB%96couldflare%E7%9A%84embedding%E6%A8%A1%E5%9E%8B%E6%95%99%E7%A8%8B/)
+   [白嫖couldflare的embedding模型 - 晓黎の小破站](/s/embed)
 
 ## 虚拟事件
 我们可以用插件创造虚拟的时间表和事件表 至少有东西扯了是吧

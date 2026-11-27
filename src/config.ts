@@ -56,6 +56,11 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Archive, // 归档页链接预设
 		LinkPreset.About, // 关于页链接预设
 		{
+			name: "依赖", // 依赖与教程索引（src/pages/deps.astro）
+			url: "/deps/",
+			external: false,
+		},
+		{
 			name: "短链", // 博客自带的短链控制台（blog.xieea.top/s/xxx）
 			url: "/links/", // 内部页面：src/pages/links.astro
 			external: false,

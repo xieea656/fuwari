@@ -1,0 +1,146 @@
+---
+import { Icon } from "astro-icon/components";
+import TutorialIndex from "@components/widget/TutorialIndex.astro";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { depLabel, tutorialBySlug, tutorialGroups, tutorialUrl } from "../data/tutorial-index";
+
+/**
+ * /deps/ —— 「依赖与教程索引」页
+ *
+ * 这一页和普通文章不同：它不是文章，而是一份人工维护的目录。
+ * 页面上的所有入口都走短链 /s/<slug>，避免正文里出现一长串 percent-encoded 中文路径。
+ * 侧边栏在这个页面上换成「带说明的索引」（MainGridLayout 的 sidebar 属性控制）。
+ */
+---
+
+<MainGridLayout title="依赖与教程索引" description="安装教程与使用教程的依赖关系索引" sidebar="deps">
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+        <div class="card-base z-10 px-6 md:px-9 py-7 relative w-full">
+            <!-- 用途说明 -->
+            <div class="flex items-start gap-3">
+                <div
+                    class="meta-icon shrink-0 !w-10 !h-10 !rounded-xl"
+                    aria-hidden="true"
+                >
+                    <Icon name="material-symbols:account-tree-rounded" class="text-xl"></Icon>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-2xl md:text-3xl font-bold leading-tight">依赖与教程索引</h1>
+                    <p class="text-50 text-sm mt-1">装一个东西之前，先看看它依赖什么。</p>
+                </div>
+            </div>
+
+            <div class="mt-5 rounded-[var(--radius-large)] border border-dashed border-[var(--line-divider)] px-4 py-3.5">
+                <p class="text-[0.875rem] leading-relaxed text-75">
+                    这里把博客里的教程按「基础依赖 → 安装教程 → 使用教程」三层整理。
+                    同一个工具往往要先把更底层的环境装好，所以每一条都标了
+                    <span class="text-[var(--primary)] font-medium">前置依赖</span>；
+                    点标题会通过短链 <code class="sl-code">/s/短码</code> 跳到对应文章。
+                </p>
+                <p class="text-50 text-xs mt-2 leading-relaxed">
+                    顺序建议：先把「基础依赖」装齐，再按「安装教程」逐个来，最后看「使用教程」。
+                    卡住了就回头看它的前置依赖。
+                </p>
+            </div>
+
+            <!-- 分组 -->
+            {
+                tutorialGroups.map((group, gi) => (
+                    <section id={group.id} class="mt-8 scroll-mt-24">
+                        <div class="flex flex-wrap items-baseline gap-2">
+                            <h2 class="text-xl font-bold">{group.name}</h2>
+                            <span class="text-50 text-xs">{group.hint}</span>
+                            <span class="ml-auto text-50 text-xs tabular-nums">
+                                {group.items.length} 篇
+                            </span>
+                        </div>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                            {group.items.map((item) => (
+                                <a
+                                    href={tutorialUrl(item.slug)}
+                                    class="group transition rounded-[var(--radius-large)] border border-[var(--line-divider)] bg-[var(--btn-plain-bg-hover)]/0
+                                           hover:bg-[var(--btn-plain-bg-hover)] px-4 py-3 no-underline"
+                                >
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <div class="font-semibold text-[0.95rem] transition group-hover:text-[var(--primary)]">
+                                                {item.title}
+                                            </div>
+                                            {item.summary && (
+                                                <div class="text-50 text-[0.8rem] leading-snug mt-1">
+                                                    {item.summary}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <Icon
+                                            name="material-symbols:arrow-outward-rounded"
+                                            class="shrink-0 text-[1.05rem] text-50 transition group-hover:text-[var(--primary)] group-hover:translate-x-0.5 -translate-y-0.5"
+                                        />
+                                    </div>
+
+                                    <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
+                                        {item.deps && item.deps.length > 0 ? (
+                                            <>
+                                                <span class="text-50 text-[0.7rem] uppercase tracking-wide">前置</span>
+                                                {item.deps.map((dep) => (
+                                                    <span class="text-[0.72rem] px-2 py-0.5 rounded-md bg-[var(--btn-regular-bg)] text-[var(--btn-content)]">
+                                                        {depLabel(dep)}
+                                                    </span>
+                                                ))}
+                                            </>
+                                        ) : (
+                                            <span class="text-[0.72rem] px-2 py-0.5 rounded-md bg-[var(--btn-regular-bg)] text-[var(--btn-content)]">
+                                                无前置依赖
+                                            </span>
+                                        )}
+                                        <span class="ml-auto font-mono text-[0.7rem] text-50 opacity-70">
+                                            /s/{item.slug}
+                                        </span>
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </section>
+                ))
+            }
+
+            <!-- 从哪开始 -->
+            <section class="mt-9">
+                <h2 class="text-lg font-bold">不知道从哪开始？</h2>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <a href={tutorialUrl("git")} class="sl-pill">① 装 Git</a>
+                    <a href={tutorialUrl("node")} class="sl-pill">② 装 Node.js</a>
+                    <a href={tutorialUrl("blog")} class="sl-pill">③ 部署自己的博客</a>
+                    <a href="/archive/" class="sl-pill">看全部文章 →</a>
+                </div>
+            </section>
+        </div>
+    </div>
+</MainGridLayout>
+
+<style>
+    .sl-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.82em;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.35rem;
+        background: var(--btn-regular-bg);
+        color: var(--btn-content);
+    }
+    .sl-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        background: var(--btn-regular-bg);
+        color: var(--btn-content);
+        text-decoration: none;
+        transition: background-color 0.15s, color 0.15s;
+    }
+    .sl-pill:hover {
+        background: var(--btn-regular-bg-hover);
+        color: var(--primary);
+    }
+</style>

@@ -33,10 +33,10 @@ tags:
 
 # 安装 Git、Node.js 与 pnpm
 1. 安装 Git  
-   Windows 安装 Git 可参考我的这篇博客：git安装教程 - 晓黎の小破站 https://blog.xieea.top/posts/%E5%88%9B%E4%BD%9C/%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85/git%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/  
+   Windows 安装 Git 可参考我的这篇博客：git安装教程 - 晓黎の小破站 /s/git  
    若系统已安装可跳过，重点是终端里能运行 `git --version`。
 2. 安装 Node.js  
-   Windows 可参考：node.js安装 https://blog.xieea.top/posts/%E5%88%9B%E4%BD%9C/%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85/nodejs%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/  
+   Windows 可参考：node.js安装 /s/node  
    安装时注意勾选 **“Add to PATH”**（若有该选项）。若已安装可跳过。
 3. 安装 pnpm  
    打开终端（Windows 可用 PowerShell 或 Git Bash），输入：

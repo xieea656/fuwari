@@ -100,7 +100,12 @@ export default defineConfig({
 			}
 		}),
         svelte(),
-		sitemap(),
+		sitemap({
+			// 站点地图跟着页面结构同步：/deps/ 这类索引页要收，
+			// /links/ 是 noindex 的控制台页，没必要塞进站图。
+			// 短链走 Pages Functions（/s/<slug>），本来就不在静态站图里。
+			filter: (page) => !page.includes("/links/"),
+		}),
 	],
 	markdown: {
 		remarkPlugins: [

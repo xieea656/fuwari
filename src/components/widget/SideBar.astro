@@ -3,20 +3,37 @@ import type { MarkdownHeading } from "astro";
 import Categories from "./Categories.astro";
 import Profile from "./Profile.astro";
 import Tag from "./Tags.astro";
+import TutorialIndex from "./TutorialIndex.astro";
 
 interface Props {
 	class?: string;
 	headings?: MarkdownHeading[];
+	/**
+	 * 侧边栏形态：
+	 *   default —— 分类 + 标签（文章页/归档页）
+	 *   index   —— 教程索引（首页把「分类」「标签」换成索引）
+	 *   deps    —— 依赖目录（/deps/ 页面用，带说明并支持页内跳转）
+	 */
+	variant?: "default" | "index" | "deps";
 }
 
 const className = Astro.props.class;
+const { variant = "default" } = Astro.props;
 ---
 <div id="sidebar" class:list={[className, "w-full"]}>
     <div class="flex flex-col w-full gap-4 mb-4">
         <Profile></Profile>
     </div>
     <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
-        <Categories class="onload-animation" style="animation-delay: 150ms"></Categories>
-        <Tag class="onload-animation" style="animation-delay: 200ms"></Tag>
+        {variant === "deps" ? (
+            <TutorialIndex class="onload-animation" style="animation-delay: 150ms" compact={false} anchors={true}></TutorialIndex>
+        ) : variant === "index" ? (
+            <TutorialIndex class="onload-animation" style="animation-delay: 150ms" compact={true}></TutorialIndex>
+        ) : (
+            <>
+                <Categories class="onload-animation" style="animation-delay: 150ms"></Categories>
+                <Tag class="onload-animation" style="animation-delay: 200ms"></Tag>
+            </>
+        )}
     </div>
 </div>
