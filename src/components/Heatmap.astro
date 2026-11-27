@@ -48,6 +48,7 @@ const PLACEHOLDER_HEIGHT = "130px";
 </div>
 
 <script is:inline data-astro-rerun>
+(function () {
 	// 消息来源 / 目标都写死为 widgets 域，绝不接受任何 "*" 或不校验 origin 的写法。
 	const WIDGET_ORIGIN = "https://widgets.xieea.top";
 	const DEFAULT_HUE = 250;
@@ -119,4 +120,5 @@ const PLACEHOLDER_HEIGHT = "130px";
 		// 把本轮句柄挂到全局槽，下一轮重跑时先释放。
 		window.__ghActivityWidget = { observer: observer, onMessage: onMessage };
 	}
+})();
 </script>
